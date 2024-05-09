@@ -1,40 +1,54 @@
-import socket
-import queue
+import zmq
+import time
 
-def server_program():
-    host = socket.gethostname()
-    port = 5000
 
-    server_socket = socket.socket()
-    server_socket.bind((host, port))
-    server_socket.listen(5)
+def publisher():
+    context_pub = zmq.Context()
 
-    print("Server is listening...")
+    socket_pub = context_pub.socket(zmq.PUB)
+    socket_pub.bind("tcp://*:5556")
 
-    response_queue = queue.Queue()
+    context_rep = zmq.Context()
+    socket_rep = context_rep.socket(zmq.REP)
+    socket_rep.bind("tcp://*:5557")
+
+    users_senhas = {}
+    users_sockets = {}
+
+    topic = "events"
 
     while True:
-        conn, address = server_socket.accept()
-        print("Connected to client: ", address)
 
-        try:
-            data = conn.recv(1024).decode()
-            if not data:
-                print("Client {} disconnected.".format(address))
-                break
-            
-            response_queue.put((conn, address, data))
-        except ConnectionResetError:
-            print("Client {} disconnected.".format(address))
-            break
+        message = socket_rep.recv_string()
+        if message:
+            parse = message.split(" ")
+            if parse[0] == "check_register":
+                _,user,password = parse
+                if user in users_senhas:
+                    if users_senhas[user] == password:
+                        new_message = "liberado"
+                    else:
+                        new_message = "err_senha"
+                else:
+                    users_senhas[user] = password
+                    new_message = "new_user"
 
-        if not response_queue.empty():
-            conn, address, response_atual = response_queue.get()
-            print("Received from client {}: {}".format(address, data))
-            response = input('Response to client {}: '.format(address))
-            conn.send(response.encode())
+            socket_rep.send_string(new_message)
 
-        conn.close()
+            if new_message == "new_user": #isso seria pra anunciar pro mundo que tem um novo usuário, seria absolutamente insuportável em uma aplicação de verdade com 100000 usuários que cresce todo dia
+                socket_pub.send_string(f"{new_message} {name}") #incluir depois {address} quando eu descobrir como mandar o socket de receber mensagem do usuário.
 
-if __name__ == '__main__':
-    server_program()
+        print(users_senhas)
+
+       # message = f"Update_{request}"
+
+      #  print(f"Publishing {topic} {message}")
+
+      # socket.send_string(f"{topic} {message}")
+
+
+       # time.sleep(1)
+
+
+if __name__ == "__main__":
+    publisher()
