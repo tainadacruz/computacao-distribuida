@@ -3,10 +3,6 @@ import os
 import select
 import sys
 
-def read_input():
-    global user_input
-    user_input = input()
-
 class Color:
     RESET = '\033[0m'
     BLACK = '\033[30m'
@@ -92,24 +88,23 @@ class Client:
 
 
 
-    def send_message(self, user_destino):
+    def connect_target(self, user_destino):
         message = f"request_info {user_destino}"
        # print(message)
         self.socket_resp.send_string(message)
         resposta = self.socket_resp.recv_string()
         if resposta == "username not found":
-            print(resposta)
+            return resposta
         else:
-            message = input(f"Mensagem para {user_destino}: ")
-            #print(message)
-            #print(resposta)
+            #message = input(f"Mensagem para {user_destino}: ")
             self.socket_push.connect(resposta)
-            self.socket_push.send_string(message)
-            self.socket_push.disconnect(resposta)
+            return resposta
+            #self.socket_push.send_string(message)
+            #self.socket_push.disconnect(resposta)
 
     def run(self):
         os.system('cls' if os.name == 'nt' else 'clear')
-
+        estado_enviar_msg = False
         print("Começar Loop")
         print(f"Para enviar uma mensagem para outro usuário digite @username_alvo")
         while True:
@@ -117,12 +112,27 @@ class Client:
             rlist, _, _ = select.select([sys.stdin, self.socket_pull], [], [])
             for ready in rlist:
                 if ready == sys.stdin:
-                    user_input=sys.stdin.readline()
-                    user_input = user_input.replace('\n',"")
-                    #print(user_input)
-                    #print(user_input[1:])
-                    self.send_message(user_input[1:])
-                    user_input=""
+                    if estado_enviar_msg:
+                        user_input=sys.stdin.readline()
+                        user_input = user_input.replace('\n',"")
+                        user_input = f"@{self.name}:"+ user_input
+                        self.socket_push.send_string(user_input)
+                        self.socket_push.disconnect(resposta)
+                        print(f"{Color.YELLOW} mensagem enviada {Color.RESET}")
+                        estado_enviar_msg = False
+                    else:
+                        user_input=sys.stdin.readline()
+                        user_input = user_input.replace('\n',"")
+                        #print(user_input)
+                        #print(user_input[1:])
+                        resposta = self.connect_target(user_input[1:])
+                        if resposta!="username not found":
+                            estado_enviar_msg = True
+                            print(f"{Color.YELLOW} digite a mensagem para {user_input[1:]} {Color.RESET}")
+                        else:
+                            print(resposta)
+
+                        user_input=""
                 else:
                     try:
                         message_received = self.socket_pull.recv_string(flags=zmq.NOBLOCK)
