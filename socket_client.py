@@ -1,4 +1,23 @@
 import zmq
+import os
+import select
+import sys
+
+def read_input():
+    global user_input
+    user_input = input()
+
+class Color:
+    RESET = '\033[0m'
+    BLACK = '\033[30m'
+    RED = '\033[31m'
+    GREEN = '\033[32m'
+    YELLOW = '\033[33m'
+    BLUE = '\033[34m'
+    MAGENTA = '\033[35m'
+    CYAN = '\033[36m'
+    WHITE = '\033[37m'
+    BOLD = '\033[1m'
 
 class Client:
     def __init__(self):
@@ -14,20 +33,21 @@ class Client:
         #ele faz a conexão pra enviar a mensagem conforme definido o destinatário então da pra deixar sem conexão por enquanto
         self.context_pull = zmq.Context()
         self.socket_pull = self.context_pull.socket(zmq.PULL)
+        #self.socket_pull.setsockopt(zmq.RCVTIMEO, 10)
 
         ######SÓ PRA TESTAR EM CONEXÃO LOCAL SEM VM######
         try:
             self.pull_address = "tcp://localhost:5558"
-            self.socket_resp.bind(self.pull_address)
+            self.socket_pull.bind(self.pull_address)
         except zmq.error.ZMQError as e:
             self.pull_address = "tcp://localhost:5559"
-            self.socket_resp.bind(self.pull_address)
+            self.socket_pull.bind(self.pull_address)
         #################################################
 
         self.register()
-
         topic = "new_users" 
         self.socket_sub.setsockopt_string(zmq.SUBSCRIBE, topic) #só se registra no tópico de novos usuários depois de se registrar para não ser notificado sobre a própria inscrição
+        self.run()
 
     def register(self, flag=0, escolhas_topico = ""):
         if flag == 0: #caso "username inv" ele pode só tentar se registrar de novo sem selecionar "login ou novo usuário?" novamente
@@ -37,12 +57,14 @@ class Client:
 
         name = input("Login: ")
         password = input("Senha: ")
-        if login == 1:
+        self.name = name
+        if login == "1":
             message_regist = f"login {name} {password} {self.pull_address}" #mensagem pro servidor com login e senha para ver se já é um usuário registrado formato [operação] [dado dado dado... dado]. trata mensagem no server
             self.socket_resp.send_string(message_regist) #manda pro servidor
             resposta = self.socket_resp.recv_string() #analisa resposta
             if resposta == "liberado": #se já existe e senha correta
                 print(f"Bem vindo de volta, {name}")
+
             elif resposta == "err_senha":
                 print("Senha errada. Registre um novo usuário ou tente outra senha")
                 self.register()
@@ -69,85 +91,45 @@ class Client:
                 print(f"Novo usuário registrado. Bem vindo, {name} !")
 
 
-def register(socket_resp, socket_sub, pull_address, flag=0, escolhas_topico = ""):
-        if flag == 0: #caso "username inv" ele pode só tentar se registrar de novo sem selecionar "login ou novo usuário?" novamente
-            login = input("Login (1)\nNovo usuário (2)\n ->")
-        else:
-            login = 2
 
-        name = input("Login: ")
-        password = input("Senha: ")
-        if login == 1:
-            message_regist = f"login {name} {password} {pull_address}" #mensagem pro servidor com login e senha para ver se já é um usuário registrado formato [operação] [dado dado dado... dado]. trata mensagem no server
-            socket_resp.send_string(message_regist) #manda pro servidor
-            resposta = socket_resp.recv_string() #analisa resposta
-            if resposta == "liberado": #se já existe e senha correta
-                print(f"Bem vindo de volta, {name}")
-            elif resposta == "err_senha":
-                print("Senha errada. Registre um novo usuário ou tente outra senha")
-                register(socket_resp,socket_sub,pull_address)
-        else: #caso contrário
-            if escolhas_topico == "":
-                interesses = input("Digite tópicos de interesse (1 palavra por tópico): ")
-                interesses = interesses.split(" ")
-                interesses_str = ""
-                for topico in interesses:
-                    socket_sub.setsockopt_string(zmq.SUBSCRIBE, topico)
-                    interesses_str+=f"{topico} "
-            else:
-                interesses_str = escolhas_topico
-
-            message_regist = f"register {name} {password} {pull_address} {interesses_str}"
-            print(message_regist)
-            socket_resp.send_string(message_regist) #manda pro servidor
-            resposta = socket_resp.recv_string() #analisa resposta
+    def send_message(self, user_destino):
+        message = f"request_info {user_destino}"
+       # print(message)
+        self.socket_resp.send_string(message)
+        resposta = self.socket_resp.recv_string()
+        if resposta == "username not found":
             print(resposta)
-            if resposta=="username inv":
-                print(f"username invalido. {name} já existe.")
-                register(socket_resp,socket_sub,pull_address,1,interesses_str)
-            else:
-                print(f"Novo usuário registrado. Bem vindo, {name} !")
+        else:
+            message = input(f"Mensagem para {user_destino}: ")
+            #print(message)
+            #print(resposta)
+            self.socket_push.connect(resposta)
+            self.socket_push.send_string(message)
+            self.socket_push.disconnect(resposta)
 
+    def run(self):
+        os.system('cls' if os.name == 'nt' else 'clear')
 
-def send_message(user_destino,socket_resp):
-    message = f"request_info {user_destino}"
-    socket_resp.send_string(message)
+        print("Começar Loop")
+        print(f"Para enviar uma mensagem para outro usuário digite @username_alvo")
+        while True:
+            #os.system('cls' if os.name == 'nt' else 'clear')
+            rlist, _, _ = select.select([sys.stdin, self.socket_pull], [], [])
+            for ready in rlist:
+                if ready == sys.stdin:
+                    user_input=sys.stdin.readline()
+                    user_input = user_input.replace('\n',"")
+                    #print(user_input)
+                    #print(user_input[1:])
+                    self.send_message(user_input[1:])
+                    user_input=""
+                else:
+                    try:
+                        message_received = self.socket_pull.recv_string(flags=zmq.NOBLOCK)
+                        print(f"{Color.RED} {message_received} {Color.RESET}")
+                    except :
+                        pass
 
-
-
-def client():
-    context_sub = zmq.Context()
-    socket_sub = context_sub.socket(zmq.SUB)
-    socket_sub.connect("tcp://localhost:5556")
-    
-    context_resp = zmq.Context()
-    socket_resp = context_resp.socket(zmq.REQ)
-    socket_resp.connect("tcp://localhost:5557")  # Assuming server is listening on port 5557
-    #socket_resp.send_string(f"Received registration confirmation for client {client_id}")
-
-    context_push = zmq.Context()
-    socket_push = context_push.socket(zmq.PUSH)
-    #ele faz a conexão pra enviar a mensagem conforme definido o destinatário então da pra deixar sem conexão por enquanto
-
-    context_pull = zmq.Context()
-    socket_pull = context_pull.socket(zmq.PULL)
-
-    ######SÓ PRA TESTAR EM CONEXÃO LOCAL SEM VM######
-    try:
-        connection = "tcp://localhost:5558"
-        socket_resp.bind(connection)
-    except zmq.error.ZMQError as e:
-        connection = "tcp://localhost:5559"
-        socket_resp.bind(connection)
-    #################################################
-
-    print(connection)
-    register(socket_resp, socket_sub, connection)
-
-    topic = "new_users" 
-    socket_sub.setsockopt_string(zmq.SUBSCRIBE, topic) #só se registra no tópico de novos usuários depois de se registrar para não ser notificado sobre a própria inscrição
-
-    
 
     #while True:
        # message = socket.recv_string()
