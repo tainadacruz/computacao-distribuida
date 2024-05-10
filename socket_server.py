@@ -49,7 +49,10 @@ class Server:
             new_message = self.users_sockets[username]
             print(new_message)
         else:
-            new_message = "username not found"
+            if username in self.users_senhas: #Se não está na lista de sockets (deleta o item quando o usuário desloga) mas está na lista de usuários, ele está offline
+                new_message = "user offline"
+            else:
+                new_message = "username not found"
 
         return new_message
 
@@ -61,10 +64,20 @@ class Server:
                 op_code = parse[0]
                 if op_code == "login" or op_code == "register":
                     new_message = self.login_users(parse)
+                    user = parse[1]
+                    pull_address = parse[3]
+                    #print(f"{user} connected {pull_address}")
+                    self.socket_pub.send_string(f"{user} connected {pull_address}")
                 elif op_code == "request_info":
                     new_message = self.provide_socket(parse)
+                elif op_code == "logoff":
+                    user_logoff = parse[1]
+                    del self.users_sockets[user_logoff]
+                    new_message = "logged off"
+                    print(f"{user_logoff} disconnected")
+                    self.socket_pub.send_string(f"{user_logoff} disconnected")
                 
-                print(f"respota: {new_message}")
+               # print(f"respota: {new_message}")
                 self.socket_rep.send_string(new_message)
 
 
@@ -72,8 +85,8 @@ class Server:
                 #if new_message == "new_user": #isso seria pra anunciar pro mundo que tem um novo usuário, seria absolutamente insuportável em uma aplicação de verdade com 100000 usuários que cresce todo dia
                 #    self.socket_pub.send_string(f"{new_message} {user}") #incluir depois {address} quando eu descobrir como mandar o socket de receber mensagem do usuário.
 
-            print(self.users_senhas)
-            print(self.users_sockets)
+            #print(self.users_senhas)
+            #print(self.users_sockets)
 
            # message = f"Update_{request}"
 

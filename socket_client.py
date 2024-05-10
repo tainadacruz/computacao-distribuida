@@ -41,6 +41,7 @@ class Client:
         #################################################
 
         self.register()
+        self.contatos = {} #sockets de usuários amigos online
         topic = "new_users" 
         self.socket_sub.setsockopt_string(zmq.SUBSCRIBE, topic) #só se registra no tópico de novos usuários depois de se registrar para não ser notificado sobre a própria inscrição
         self.run()
@@ -93,7 +94,7 @@ class Client:
        # print(message)
         self.socket_resp.send_string(message)
         resposta = self.socket_resp.recv_string()
-        if resposta == "username not found":
+        if resposta == "username not found" or resposta=="user offline":
             return resposta
         else:
             #message = input(f"Mensagem para {user_destino}: ")
@@ -106,10 +107,12 @@ class Client:
         os.system('cls' if os.name == 'nt' else 'clear')
         estado_enviar_msg = False
         print("Começar Loop")
-        print(f"Para enviar uma mensagem para outro usuário digite @username_alvo")
+        print("Para enviar uma mensagem para outro usuário digite @username_alvo")
+        print("Para desconectar digite logoff")
+        fila = []
         while True:
             #os.system('cls' if os.name == 'nt' else 'clear')
-            rlist, _, _ = select.select([sys.stdin, self.socket_pull], [], [])
+            rlist, _, _ = select.select([sys.stdin,  self.socket_sub, self.socket_pull,], [], [])
             for ready in rlist:
                 if ready == sys.stdin:
                     if estado_enviar_msg:
@@ -123,22 +126,43 @@ class Client:
                     else:
                         user_input=sys.stdin.readline()
                         user_input = user_input.replace('\n',"")
-                        #print(user_input)
-                        #print(user_input[1:])
-                        resposta = self.connect_target(user_input[1:])
-                        if resposta!="username not found":
-                            estado_enviar_msg = True
-                            print(f"{Color.YELLOW} digite a mensagem para {user_input[1:]} {Color.RESET}")
-                        else:
-                            print(resposta)
+                        if user_input=="logoff": #OPÇÃO DESLOGAR
+                            self.socket_resp.send_string(f"{user_input} {self.name}")
+                            self.socket_resp.recv_string()
+                            quit()
+                        else: #OPÇÃO MANDAR MENSAGEM PRA USUÁRIO ALVO
+                            user_alvo = user_input[1:]
+                            if user_alvo not in self.contatos:
+                                resposta = self.connect_target(user_alvo)
+                                if resposta!="username not found" and resposta!="user offline":
+                                    estado_enviar_msg = True
+                                    print(f"{Color.YELLOW} digite a mensagem para {user_alvo} {Color.RESET}")
+                                elif resposta == "username not found":
+                                    print(resposta)
+                                elif resposta == "user offline":
+                                    #Se inscreve no tópico com nome do usuário alvo para ser notificado quando o usuário ficar online e offline para atualizar a lista de contatos local
+                                    self.socket_sub.setsockopt_string(zmq.SUBSCRIBE,user_alvo)
+                                    print(f"{resposta} você será notificado quando {user_alvo} ficar online")
+                                #else:
+                                    
 
-                        user_input=""
+                            user_input=""
                 else:
-                    try:
+                    try: #Receber mensagem de outros usuários pelo socket_pull assincronamente
                         message_received = self.socket_pull.recv_string(flags=zmq.NOBLOCK)
+                        fila.append(f"{Color.RED} {message_received} {Color.RESET}")
                         print(f"{Color.RED} {message_received} {Color.RESET}")
+
                     except :
                         pass
+                    try: #Receber mensagem de quando um usuário de interesse ficou online/offline
+                        message_received = self.socket_sub.recv_string(flags=zmq.NOBLOCK)
+                        fila.append(f"{Color.GREEN} **server: {message_received} ** {Color.RESET}")
+                        print(F"{Color.GREEN} **server: {message_received} ** {Color.RESET}" )
+                    except:
+                        pass
+                    
+                    
 
 
     #while True:
