@@ -1,5 +1,4 @@
 import zmq
-import time
 
 
 class Server:
