@@ -40,7 +40,7 @@ class Client:
         while True:
             interesse = input("->")
             self.socket_sub.setsockopt_string(zmq.SUBSCRIBE, f"@{interesse}@")
-            accept = input("Algo mais? (Y/N)")
+            accept = input("Algo mais? (Y/N)\n->")
             if accept == "N" or accept == "n":
                 break
             print("Digite mais um interesse")
@@ -75,7 +75,6 @@ class Client:
                             else:
                                 correct[0] = f"Tópico: {correct[0][1:(len(correct[0]) - 1)]}\n{correct[1]}"
                                 del correct[1]
-                            print(correct)
                             to_print = " ".join(correct)
                             print(f"{Color.RED}{to_print}{Color.RESET}")
                             print("\n")
