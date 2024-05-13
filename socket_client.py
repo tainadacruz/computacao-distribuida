@@ -4,6 +4,7 @@ import select
 import sys
 
 from configs import *
+from sender import Sender
 from user import User
 
 class Client:
@@ -39,7 +40,7 @@ class Client:
         self.user = None
 
         self.init()
-        self.contatos = {} # Sockets de usuários amigos online
+        self.contatos = {} # Sockets de usuários amigos online (Colocar na classe User)
         topic = "new_users" 
         self.socket_sub.setsockopt_string(zmq.SUBSCRIBE, topic) #só se registra no tópico de novos usuários depois de se registrar para não ser notificado sobre a própria inscrição
         self.run()
@@ -66,7 +67,7 @@ class Client:
         self.user.set_online(True)
         # self.user.set_socket(self.socket_pull)       SE DESCOMENTAR, QUEBRA TUDO
         
-        self.socket_resp.send_pyobj(self.user) # Manda pro servidor
+        self.socket_resp.send_pyobj(Sender('login', self.user)) # Manda pro servidor
         resposta = self.socket_resp.recv_pyobj() # Analisa resposta
             
         if resposta == "liberado": # Se já existe e senha correta
@@ -83,7 +84,7 @@ class Client:
         self.user.set_online(True)
         # self.user.set_socket(self.socket_pull)       SE DESCOMENTAR, QUEBRA TUDO
         
-        self.socket_resp.send_pyobj(self.user)  # Manda pro servidor
+        self.socket_resp.send_pyobj(Sender('register', self.user))  # Manda pro servidor
         resposta = self.socket_resp.recv_pyobj() # Analisa resposta
         print(resposta)
             
@@ -111,10 +112,9 @@ class Client:
         
 
     def connect_target(self, user_destino):
-        message = f"request_info {user_destino}"
-       # print(message)
-        self.socket_resp.send_pyobj(message)
+        self.socket_resp.send_pyobj(Sender('request_info', user_destino))
         resposta = self.socket_resp.recv_pyobj()
+        
         if resposta == "username not found" or resposta=="user offline":
             return resposta
         else:
@@ -155,12 +155,18 @@ class Client:
                         print(f"{Color.YELLOW} mensagem enviada {Color.RESET}")
                         estado_enviar_msg = False
                     else:
-                        user_input=sys.stdin.readline()
+                        user_input = sys.stdin.readline()
                         user_input = user_input.replace('\n',"")
+                        
                         if user_input == "logoff": #OPÇÃO DESLOGAR
-                            self.socket_resp.send_pyobj(f"{user_input} {self.name}")
+                            
+                            
+                            self.socket_resp.send_pyobj(Sender('logoff', self.user.username))
                             self.socket_resp.recv_pyobj()
                             quit()
+                            
+                        # DAQUI PRA BAIXO VAI QUEBRAR PORQUE NÃO CONSEGUI TESTAR:
+                        
                         else: # OPÇÃO MANDAR MENSAGEM PRA USUÁRIO ALVO
                             user_alvo = user_input[1:]
                             if user_alvo not in self.contatos:

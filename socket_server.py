@@ -40,26 +40,23 @@ class Server:
 
         return new_message
 
-    def provide_socket(self,parse):
-        _, username = parse
-        print(parse)
-        print(username)
-        if username in self.users_sockets:
-            new_message = self.users_sockets[username]
+    def provide_socket(self, username):
+        if username in SOCKETS:
+            new_message = SOCKETS[username]
             print(new_message)
         else:
-            if username in self.users_senhas: #Se não está na lista de sockets (deleta o item quando o usuário desloga) mas está na lista de usuários, ele está offline
+            if username in USERS_DIC: #Se não está na lista de sockets (deleta o item quando o usuário desloga) mas está na lista de usuários, ele está offline
                 new_message = "user offline"
             else:
                 new_message = "username not found"
 
         return new_message
 
-    # NÃO FUNCIONA
     def run(self):
         while True:
-            user = self.socket_rep.recv_pyobj()
-            op_code = user.registration_type() # POR CAUSA DISSO, SÓ FUNCIONA NO CONTEXTO DE LOGIN/REGISTER, ALTERAR
+            reiceved = self.socket_rep.recv_pyobj()
+            op_code = reiceved.flag
+            user = reiceved.object
                         
             if op_code:
                 if op_code == "login" or op_code == "register":
@@ -67,7 +64,6 @@ class Server:
                     #print(f"{user} connected {user.pull_address}")
                     self.socket_pub.send_pyobj(f"{user.username} connected {user.pull_address}")
                     
-                # AÍ QUEBRA AQUI NOS OUTROS
                 if op_code == "request_info":
                     new_message = self.provide_socket(user)
                     

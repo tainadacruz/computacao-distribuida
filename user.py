@@ -3,14 +3,14 @@ from configs import Color
 
 
 class User:
-    def __init__(self, registration_type, username, password, pull_address, interests = ''):
-        self.registration_type = registration_type
+    def __init__(self, username, password, pull_address, interests = ''):
         self.username = username
         self.password = password
         self.interests = interests
         self.pull_address = pull_address
         self.is_online = False
         self.socket = None
+        self.contacts = {}
 
     def set_online(self, online):
         self.is_online = online
