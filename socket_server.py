@@ -68,10 +68,10 @@ class Server:
                     new_message = self.provide_socket(user)
                     
                 elif op_code == "logoff":
-                    del SOCKETS[user]
+                    del SOCKETS[user]   # DEVE SER PROBLEMA DE CAST
                     new_message = "logged off"
-                    print(f"{user.username} disconnected")
-                    self.socket_pub.send_pyobj(f"{user.username} disconnected")
+                    print(f"{user} disconnected")
+                    self.socket_pub.send_pyobj(f"{user} disconnected")
                 
                # print(f"respota: {new_message}")
                 self.socket_rep.send_pyobj(new_message)
