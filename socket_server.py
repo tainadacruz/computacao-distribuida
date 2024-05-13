@@ -21,13 +21,15 @@ class Server:
             message = self.socket_con.recv_string()
             if message:
                 parse = message.split(" ")
+                print(parse)
                 op_code = parse[0]
-                if op_code == "refresh":
-                    user_logoff = parse[1]
-                    del self.users_sockets[user_logoff]
-                    new_message = "logged off"
-                    print(f"{user_logoff} disconnected")
-                    self.socket_pub.send_string(f"{user_logoff} disconnected")
+                if op_code == ";;":
+                    user = parse[1]
+                    del parse[0:2]
+                    send = " ".join(parse)
+                    print(user)
+                    print(send)
+                    self.socket_pub.send_string(f"@{user}@ {send}")
 
 
 

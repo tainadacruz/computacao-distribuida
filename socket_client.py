@@ -32,17 +32,16 @@ class Client:
         while True:
             name = input("Insira seu email\n->")
             confirm = input(f"O email {name} está correto?(Y/N)\n->")
-            if confirm == "Y":
+            if confirm == "Y" or confirm == "y":
                 break
         self.name = name
-        self.socket_sub.setsockopt_string(zmq.SUBSCRIBE, self.name)
+        self.socket_sub.setsockopt_string(zmq.SUBSCRIBE, f"@{self.name}@")
 
     def run(self):
         estado_enviar_msg = False
         print("Começar Loop")
         print("Para enviar uma mensagem para outro usuário digite @username_alvo")
         print("Para ver novas mensagens digite refresh")
-        print("Para se inscrever a um tópico digite !nome_tópico")
         print("Para desconectar digite logoff")
         user_alvo = None
         while True:
@@ -50,7 +49,7 @@ class Client:
                 user_input = input("->")
             if estado_enviar_msg:
                 user_input = input("Escreva sua mensagem:\n")
-                self.socket_push.send_string(f";;{user_alvo};;\nDe: {self.name}\n{user_input}")
+                self.socket_push.send_string(f";; {user_alvo} De: {self.name}\n{user_input}")
                 print(f"{Color.YELLOW} mensagem enviada {Color.RESET}")
                 user_alvo = None
                 estado_enviar_msg = False
@@ -58,19 +57,19 @@ class Client:
                 if user_input=="logoff": #OPÇÃO DESLOGAR
                     quit()
                 elif user_input=="refresh": #OPÇÃO RECEBER NOVAS MENSAGENS
-                    self.socket_push.send_string(f"refresh {self.socket_sub.getsockopt_string()}")
                     while True:
                         try:
                             message_received = self.socket_sub.recv_string(flags=zmq.NOBLOCK)
-                            print(f"{Color.RED} {message_received} {Color.RESET}")
+                            correct = message_received.split(" ")
+                            del correct[0]
+                            print(correct)
+                            to_print = " ".join(correct)
+                            print(to_print)
+                            print(f"{Color.RED}{to_print}{Color.RESET}")
                             print("\n")
                         except:
                             print("Mensagens Recebidas")
                             break
-                elif user_input[0] == "!": #OPÇÃO SE INSCREVER A UM TÓPICO
-                    topic = user_input[1:]
-                    self.socket_sub.setsockopt_string(zmq.SUBSCRIBE, topic)
-                    print(self.socket_sub.getsockopt_string(zmq.SUBSCRIBE))
                 elif user_input[0] == "@": #OPÇÃO MANDAR MENSAGEM PRA USUÁRIO ALVO
                     user_alvo = user_input[1:]
                     estado_enviar_msg = True
