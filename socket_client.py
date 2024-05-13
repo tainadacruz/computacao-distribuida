@@ -56,10 +56,10 @@ class Client:
         password = input("Senha: ")
                 
         if login == "1":
-            self.user = User('login', name, password, self.pull_address)
+            self.user = User(name, password, self.pull_address)
             self.login(self.user)
         else:
-            self.user = User('register', name, password, self.pull_address)
+            self.user = User(name, password, self.pull_address)
             self.register(self.user, escolhas_topico)
             
                  
