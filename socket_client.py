@@ -59,14 +59,8 @@ class Client:
         self.socket_req.send_string(f"reg {name}")
         resposta = self.socket_req.recv_string()
         resposta = resposta.split(" ")
-        #self.address_enviar = resposta[0]
         self.address_receber = resposta[1]
-        print(resposta)
-        #self.socket_enviar.connect(self.address_enviar)
         self.socket_receber.bind(self.address_receber)
-       # self.socket_enviar.send_string("teste")
-       # msg = self.socket_receber.recv_string()
-       # print(msg)
 
 
 
@@ -110,13 +104,11 @@ class Client:
                             try:
                                 message_received = self.socket_sub.recv_string(flags=zmq.NOBLOCK)
                                 correct = message_received.split(" ")
-                                print(correct)
                                 if correct[0] == f"@{self.name}@":
                                     del correct[0]
                                 else:
                                     correct[0] = f"Tópico: {correct[0][1:(len(correct[0]) - 1)]}\n{correct[1]}"
                                     del correct[1]
-                                print(correct)
                                 if correct[0] == "pedido_conversa":
                                     #self.socket_pub.send_string(f"@{nome_alvo}@ pedido_conversa {nome_pedindo} {socket_pedindo}")
                                     resposta = input(f"usuário {correct[1]} deseja conversar com você. Aceita? (Y/N)\n-> ")
@@ -148,7 +140,6 @@ class Client:
                         self.socket_sub.setsockopt_string(zmq.SUBSCRIBE, f"@{topic}@")
                     elif user_input[0] == "#":
                         user_alvo = user_input[1:]
-                        print(user_alvo)
                         self.socket_req.send_string(f"# {self.name} {user_alvo} {self.address_receber}")
                         resposta = self.socket_req.recv_string()
                         estado_aguardando_conversa = True
@@ -161,7 +152,6 @@ class Client:
                         print(self.temp_string)
                         self.socket_enviar.connect(self.temp_string[2])
                         self.endereco_alvo = self.temp_string[2]
-                        print(self.address_receber)
                         self.socket_enviar.send_string(f"{self.address_receber}")
                         print("Enviado")
                         #self.socket_enviar.recv_string()
@@ -170,28 +160,16 @@ class Client:
                         estado_aceitando_conversado = True
                         break
 
-               # elif ready == self.socket_sub:
-                #    try: #Receber mensagem de quando um usuário de interesse ficou online/offline
-                 #       message_received = self.socket_sub.recv_string(flags=zmq.NOBLOCK)
-                  #      fila.append(f"{Color.GREEN} **server: {message_received} ** {Color.RESET}")
-                   #     print(F"{Color.GREEN} **server: {message_received} ** {Color.RESET}" )
-                   # except:
-                   #     pass
-
-
                 elif ready == self.socket_receber and (estado_aguardando_conversa or estado_aceitando_conversado):
                     if estado_aguardando_conversa:
                         print("estou aqui")
                         endereço = self.socket_receber.recv_string()
-                        print(endereço)
                         self.socket_enviar.connect(endereço)
                         self.endereco_alvo = endereço
                         estado_aguardando_conversa = False
-                       # self.socket_receber.send_string("")#ack
                     estado_aceitando_conversado = False
 
                     loop = True
-                    #user_input = ""
 
                     print("INICIANDO CONVERSA (digite 'quit' para voltar ao menu principal) \n -> ")
                     while loop:
