@@ -186,13 +186,24 @@ class Client:
                        # self.socket_receber.send_pyobj(ACK)
 
                     loop = True
+                    #user_input = ""
 
                     print("INICIANDO CONVERSA (digite 'quit' para voltar ao menu principal) \n -> ")
                     while loop:
                             rlist2, _, _ = select.select([sys.stdin, self.socket_receber], [], [])
                             for ready in rlist2:
+                                
+                                while True:
+                                    try:
+                                        msg = self.socket_receber.recv_pyobj(flags = zmq.NOBLOCK)
+                                       # self.socket_receber.send_string("")
+                                        #print("ack")
+                                        print(f"{msg}")
+                                    except zmq.error.Again:
+                                        break
+
                                 if ready == sys.stdin:
-                                    user_input=sys.stdin.readline()
+                                    user_input= sys.stdin.readline()
                                     user_input = user_input.replace('\n',"")
                                     if user_input=="quit":
                                         self.socket_enviar.send_pyobj(f"{self.name}: *desconectou*")
@@ -200,23 +211,6 @@ class Client:
                                         loop = False
                                     else:
                                         self.socket_enviar.send_pyobj(f"{self.name}: {user_input}")
-                                   
-                                    
-                                else:
-                                    while True:
-                                        try:
-                                            msg = self.socket_receber.recv_pyobj(flags = zmq.NOBLOCK)
-                                           # self.socket_receber.send_pyobj(ACK)
-                                            #print("ack")
-                                            print(f"{msg}")
-
-                                        except zmq.error.Again:
-                                            break
-                                user_input = ""
-
-                    
-
-
 
 
 if __name__ == "__main__":
