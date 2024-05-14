@@ -22,6 +22,7 @@ class Client:
         # Cria mas não conecta socket para enviar mensagens
         self.context_enviar = zmq.Context()
         self.socket_enviar = self.context_enviar.socket(zmq.PUSH)
+        self.endereco_alvo = ""
 
         # Cria mas não conecta socket para receber mensagens
         self.context_receber = zmq.Context()
@@ -54,20 +55,10 @@ class Client:
             print("Digite mais um interesse")
             
         self.socket_req.send_pyobj(Package(f'reg', f'{email}'))
-        resposta = self.socket_req.recv_pyobj().object.split(' ')
-
-        #self.address_enviar = resposta[0]
-        
+        resposta = self.socket_req.recv_pyobj().object.split(' ')        
         self.address_receber = resposta[1]
         print(resposta)
-        
-        #self.socket_enviar.connect(self.address_enviar)
         self.socket_receber.bind(self.address_receber)
-       # self.socket_enviar.send_pyobj("teste")
-       # msg = self.socket_receber.recv_pyobj().object
-       # print(msg)
-
-
 
     def run(self):
         estado_enviar_msg = False
@@ -110,7 +101,6 @@ class Client:
                                 else:
                                     correct[0] = f"Tópico: {correct[0][1:(len(correct[0]) - 1)]}\n{correct[1]}"
                                     del correct[1]
-                                print(correct)
                                 if correct[0] == "pedido_conversa":
                                     #self.socket_pub.send_pyobj(f"@{nome_alvo}@ pedido_conversa {nome_pedindo} {socket_pedindo}")
                                     resposta = input(f"usuário {correct[1]} deseja conversar com você. Aceita? (Y/N)\n-> ")
@@ -164,34 +154,27 @@ class Client:
                         print("Enviando...")
                         print(self.temp_string)
                         self.socket_enviar.connect(self.temp_string[2])
-                        print(self.address_receber)
+                        
+                        self.endereco_alvo = self.temp_string[2]
                         self.socket_enviar.send_pyobj(Package(f'', f'{self.address_receber}'))
                         print("Enviado.")
                         #self.socket_enviar.recv_pyobj().object
                         print("Respondido.")
+
                         estado_receber_msg = False
                         estado_aceitando_conversado = True
                         break
-
-               # elif ready == self.socket_sub:
-                #    try: #Receber mensagem de quando um usuário de interesse ficou online/offline
-                 #       message_received = self.socket_sub.recv_pyobj(flags=zmq.NOBLOCK).object
-                  #      fila.append(f"{Color.GREEN} **server: {message_received} ** {Color.RESET}")
-                   #     print(F"{Color.GREEN} **server: {message_received} ** {Color.RESET}" )
-                   # except:
-                   #     pass
-
 
                 elif ready == self.socket_receber and (estado_aguardando_conversa or estado_aceitando_conversado):
                     if estado_aguardando_conversa:
                         print("estou aqui")
                         endereco = self.socket_receber.recv_pyobj()
-                        print(endereco)
                         self.socket_enviar.connect(endereco)
-                       # self.socket_receber.send_pyobj(ACK)
+                        self.endereco_alvo = endereco
+                        estado_aguardando_conversa = False
+                    estado_aceitando_conversado = False
 
                     loop = True
-                    #user_input = ""
 
                     print("INICIANDO CONVERSA (digite 'quit' para voltar ao menu principal) \n -> ")
                     while loop:
@@ -204,6 +187,13 @@ class Client:
                                        # self.socket_receber.send_pyobj(ACK)
                                         #print("ack")
                                         print(f"{msg}")
+                                        msg_test = msg.split(" ")
+                                        if msg_test[-1] == "*desconectou*":
+                                            self.socket_enviar.disconnect(self.endereco_alvo)
+                                            self.endereco_alvo = ""
+                                            print("*DESCONECTANDO DA CONVERSA*")
+                                            loop = False
+                                            break
                                     except zmq.error.Again:
                                         break
 
@@ -211,7 +201,9 @@ class Client:
                                     user_input= sys.stdin.readline()
                                     user_input = user_input.replace('\n',"")
                                     if user_input=="quit":
-                                        self.socket_enviar.send_pyobj(Package(f'', f'{self.user.email}: *desconectou*'))
+                                        self.socket_enviar.send_string(f"{self.user.email}: *desconectou*")
+                                        self.socket_enviar.disconnect(self.endereco_alvo)
+                                        self.endereco_alvo = ""
                                         print("*DESCONECTANDO DA CONVERSA*")
                                         loop = False
                                     else:
