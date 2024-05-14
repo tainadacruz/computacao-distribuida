@@ -3,68 +3,68 @@ import os
 import select
 import sys
 
-class Color:
-    RESET = '\033[0m'
-    BLACK = '\033[30m'
-    RED = '\033[31m'
-    GREEN = '\033[32m'
-    YELLOW = '\033[33m'
-    BLUE = '\033[34m'
-    MAGENTA = '\033[35m'
-    CYAN = '\033[36m'
-    WHITE = '\033[37m'
-    BOLD = '\033[1m'
+from configs import *
+from package import Package
+from user import User
 
 class Client:
     def __init__(self):
-        #Inscreve no socket publisher do servidor
+        # Inscreve no socket publisher do servidor
         self.context_sub = zmq.Context()
         self.socket_sub = self.context_sub.socket(zmq.SUB)
-        self.socket_sub.connect("tcp://localhost:5556")
+        self.socket_sub.connect(TCP_IP_SUB_URL)
 
-        #Conecta ao socket rep do servidor
+        # Conecta ao socket rep do servidor
         self.context_req = zmq.Context()
         self.socket_req = self.context_req.socket(zmq.REQ)
-        self.socket_req.connect("tcp://localhost:5557")
+        self.socket_req.connect(TCP_IP_REQ_URL)
 
-        #Cria mas não conecta socket para enviar mensagens
+        # Cria mas não conecta socket para enviar mensagens
         self.context_enviar = zmq.Context()
         self.socket_enviar = self.context_enviar.socket(zmq.PUSH)
 
-        #Cria mas não conecta socket para receber mensagens
+        # Cria mas não conecta socket para receber mensagens
         self.context_receber = zmq.Context()
         self.socket_receber = self.context_receber.socket(zmq.PULL)
 
-        #Executa
+        # Executa
         self.register()
         self.run()
 
     def register(self):
         while True:
-            name = input("Insira seu email\n->")
-            confirm = input(f"O email {name} está correto?(Y/N)\n->")
-            if confirm == "Y" or confirm == "y":
+            email = input("Insira seu e-mail\n->")
+            confirm = input(f"O e-mail {email} está correto? (y/N)\n->").strip().lower()
+            if confirm == "y":
                 break
-        self.name = name
-        self.socket_sub.setsockopt_string(zmq.SUBSCRIBE, f"@{self.name}@")
+            
+        self.user = User(email)
+        self.socket_sub.setsockopt_string(zmq.SUBSCRIBE, f"@{self.user.email}@")
+        
         print(f"Quais seus interesses?")
         while True:
             interesse = input("->")
             self.socket_sub.setsockopt_string(zmq.SUBSCRIBE, f"@{interesse}@")
-            accept = input("Algo mais? (Y/N)\n->")
-            if accept == "N" or accept == "n":
+            
+            accept = input("Algo mais? (Y/N)\n->").strip().lower()
+            
+            if accept == "n":
                 break
+            
             print("Digite mais um interesse")
-        self.socket_req.send_string(f"reg {name}")
-        resposta = self.socket_req.recv_string()
-        resposta = resposta.split(" ")
+            
+        self.socket_req.send_pyobj(Package('reg', f'{email}'))
+        resposta = self.socket_req.recv_pyobj().split(' ')
+
         #self.address_enviar = resposta[0]
+        
         self.address_receber = resposta[1]
         print(resposta)
+        
         #self.socket_enviar.connect(self.address_enviar)
         self.socket_receber.bind(self.address_receber)
-       # self.socket_enviar.send_string("teste")
-       # msg = self.socket_receber.recv_string()
+       # self.socket_enviar.send_pyobj("teste")
+       # msg = self.socket_receber.recv_pyobj()
        # print(msg)
 
 
@@ -107,7 +107,7 @@ class Client:
                     elif user_input=="refresh": #OPÇÃO RECEBER NOVAS MENSAGENS
                         while True:
                             try:
-                                message_received = self.socket_sub.recv_string(flags=zmq.NOBLOCK)
+                                message_received = self.socket_sub.recv_pyobj(flags=zmq.NOBLOCK)
                                 correct = message_received.split(" ")
                                 print(correct)
                                 if correct[0] == f"@{self.name}@":
@@ -117,7 +117,7 @@ class Client:
                                     del correct[1]
                                 print(correct)
                                 if correct[0] == "pedido_conversa":
-                                    #self.socket_pub.send_string(f"@{nome_alvo}@ pedido_conversa {nome_pedindo} {socket_pedindo}")
+                                    #self.socket_pub.send_pyobj(f"@{nome_alvo}@ pedido_conversa {nome_pedindo} {socket_pedindo}")
                                     resposta = input(f"usuário {correct[1]} deseja conversar com você. Aceita? (Y/N)\n-> ")
                                     resposta = resposta.lower()
                                     if resposta == "y":
@@ -137,8 +137,8 @@ class Client:
                     elif user_input[0] == "@": #OPÇÃO MANDAR MENSAGEM PRA USUÁRIO ALVO
                         user_alvo = user_input[1:]
                         user_input = input("Escreva sua mensagem:\n")
-                        self.socket_req.send_string(f";; {user_alvo} De: {self.name}\n{user_input}")
-                        self.socket_req.recv_string()
+                        self.socket_req.send_pyobj(f";; {user_alvo} De: {self.name}\n{user_input}")
+                        self.socket_req.recv_pyobj()
                         print(f"{Color.YELLOW} mensagem enviada {Color.RESET}")
                         user_alvo = None
                         estado_enviar_msg = False
@@ -148,8 +148,8 @@ class Client:
                     elif user_input[0] == "#":
                         user_alvo = user_input[1:]
                         print(user_alvo)
-                        self.socket_req.send_string(f"# {self.name} {user_alvo} {self.address_receber}")
-                        resposta = self.socket_req.recv_string()
+                        self.socket_req.send_pyobj(f"# {self.name} {user_alvo} {self.address_receber}")
+                        resposta = self.socket_req.recv_pyobj()
                         estado_aguardando_conversa = True
     
                     else:
@@ -160,9 +160,9 @@ class Client:
                         print(self.temp_string)
                         self.socket_enviar.connect(self.temp_string[2])
                         print(self.address_receber)
-                        self.socket_enviar.send_string(f"{self.address_receber}")
+                        self.socket_enviar.send_pyobj(f"{self.address_receber}")
                         print("Enviado")
-                        #self.socket_enviar.recv_string()
+                        #self.socket_enviar.recv_pyobj()
                         print("respondido")
                         estado_receber_msg = False
                         estado_aceitando_conversado = True
@@ -170,7 +170,7 @@ class Client:
 
                # elif ready == self.socket_sub:
                 #    try: #Receber mensagem de quando um usuário de interesse ficou online/offline
-                 #       message_received = self.socket_sub.recv_string(flags=zmq.NOBLOCK)
+                 #       message_received = self.socket_sub.recv_pyobj(flags=zmq.NOBLOCK)
                   #      fila.append(f"{Color.GREEN} **server: {message_received} ** {Color.RESET}")
                    #     print(F"{Color.GREEN} **server: {message_received} ** {Color.RESET}" )
                    # except:
@@ -180,10 +180,10 @@ class Client:
                 elif ready == self.socket_receber and (estado_aguardando_conversa or estado_aceitando_conversado):
                     if estado_aguardando_conversa:
                         print("estou aqui")
-                        endereço = self.socket_receber.recv_string()
+                        endereço = self.socket_receber.recv_pyobj()
                         print(endereço)
                         self.socket_enviar.connect(endereço)
-                       # self.socket_receber.send_string("")#ack
+                       # self.socket_receber.send_pyobj(ACK)
 
                     loop = True
 
@@ -195,18 +195,18 @@ class Client:
                                     user_input=sys.stdin.readline()
                                     user_input = user_input.replace('\n',"")
                                     if user_input=="quit":
-                                        self.socket_enviar.send_string(f"{self.name}: *desconectou*")
+                                        self.socket_enviar.send_pyobj(f"{self.name}: *desconectou*")
                                         print("*DESCONECTANDO DA CONVERSA*")
                                         loop = False
                                     else:
-                                        self.socket_enviar.send_string(f"{self.name}: {user_input}")
+                                        self.socket_enviar.send_pyobj(f"{self.name}: {user_input}")
                                    
                                     
                                 else:
                                     while True:
                                         try:
-                                            msg = self.socket_receber.recv_string(flags = zmq.NOBLOCK)
-                                           # self.socket_receber.send_string("")
+                                            msg = self.socket_receber.recv_pyobj(flags = zmq.NOBLOCK)
+                                           # self.socket_receber.send_pyobj(ACK)
                                             #print("ack")
                                             print(f"{msg}")
 
