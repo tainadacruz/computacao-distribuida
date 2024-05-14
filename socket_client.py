@@ -30,6 +30,7 @@ class Client:
         #Cria mas não conecta socket para enviar mensagens
         self.context_enviar = zmq.Context()
         self.socket_enviar = self.context_enviar.socket(zmq.PUSH)
+        self.endereco_alvo = ""
 
         #Cria mas não conecta socket para receber mensagens
         self.context_receber = zmq.Context()
@@ -159,6 +160,7 @@ class Client:
                         print("Enviando")
                         print(self.temp_string)
                         self.socket_enviar.connect(self.temp_string[2])
+                        self.endereco_alvo = self.temp_string[2]
                         print(self.address_receber)
                         self.socket_enviar.send_string(f"{self.address_receber}")
                         print("Enviado")
@@ -183,7 +185,10 @@ class Client:
                         endereço = self.socket_receber.recv_string()
                         print(endereço)
                         self.socket_enviar.connect(endereço)
+                        self.endereco_alvo = endereço
+                        estado_aguardando_conversa = False
                        # self.socket_receber.send_string("")#ack
+                    estado_aceitando_conversado = False
 
                     loop = True
                     #user_input = ""
@@ -199,6 +204,13 @@ class Client:
                                        # self.socket_receber.send_string("")
                                         #print("ack")
                                         print(f"{msg}")
+                                        msg_test = msg.split(" ")
+                                        if msg_test[-1] == "*desconectou*":
+                                            self.socket_enviar.disconnect(self.endereco_alvo)
+                                            self.endereco_alvo = ""
+                                            print("*DESCONECTANDO DA CONVERSA*")
+                                            loop = False
+                                            break
                                     except zmq.error.Again:
                                         break
 
@@ -207,6 +219,8 @@ class Client:
                                     user_input = user_input.replace('\n',"")
                                     if user_input=="quit":
                                         self.socket_enviar.send_string(f"{self.name}: *desconectou*")
+                                        self.socket_enviar.disconnect(self.endereco_alvo)
+                                        self.endereco_alvo = ""
                                         print("*DESCONECTANDO DA CONVERSA*")
                                         loop = False
                                     else:
