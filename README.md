@@ -10,7 +10,6 @@ Este projeto implementa um espaço de tuplas usando Kazoo/Zookeeper com um backe
   - [Configuração do Backend](#configuração-do-backend)
   - [Configuração do Frontend](#configuração-do-frontend)
 - [Uso](#uso)
-- [Licença](#licença)
 
 ## Pré-requisitos
 
@@ -112,7 +111,7 @@ Este projeto implementa um espaço de tuplas usando Kazoo/Zookeeper com um backe
 
 Sua aplicação React deve estar em execução em http://localhost:3000.
 
-### Usage
+### Uso
 
 Abra o seu navegador e navegue até http://localhost:3000. 
 Use o formulário na página para escrever, obter e listar tuplas no espaço de tuplas.
