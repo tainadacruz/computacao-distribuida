@@ -28,6 +28,44 @@ class TupleSpace:
         except KazooException as e:
             print(f"Error disconnecting from ZooKeeper: {e}")
 
+    def get(self, searched_tuple, read = False):
+        found_tuple = None
+        parse_search = searched_tuple.split(',')
+        parse_search_size = len(parse_search)
+        self.connect()
+        if self.connected and self.zk.exists(self.tuple_path):
+                children = self.zk.get_children(self.tuple_path)
+                
+                if children:
+                    
+                    for child in children:
+                        match_found = True
+                        tuple_full_path = f"{self.tuple_path}/{child}"
+                        data, _ = self.zk.get(tuple_full_path)
+                        tuple_data = data.decode('utf-8')
+                        parse_tuple = tuple_data.split(',')
+                        parse_tuple_size = len(parse_tuple)
+                        if parse_search_size == parse_tuple_size:
+                            for i in range(len(parse_search)):
+                                if parse_search[i]!='*':
+                                    if parse_search[i] != parse_tuple[i]:
+                                        match_found = False
+                                        break
+                            if match_found:
+                                found_tuple = tuple_data
+                                if not read: 
+                                    self.zk.delete(tuple_full_path)
+                                self.disconnect()
+                                return found_tuple
+                else:
+                    print(f"No tuples found under path {self.tuple_path}")
+        self.disconnect()
+        return found_tuple
+        
+    
+    def read(self, searched_tuple):
+        return self.get(searched_tuple, True)
+
     def ensure_path(self):
         try:
             if not self.zk.exists(self.tuple_path):
@@ -47,7 +85,7 @@ class TupleSpace:
                 children = self.zk.get_children(self.tuple_path)
 
                 if children:
-                    print(f"Tuples under path {self.tuple_path}:")
+                    print(f"\nTuples under path {self.tuple_path}:")
                     for child in children:
                         tuple_full_path = f"{self.tuple_path}/{child}"
                         data, _ = self.zk.get(tuple_full_path)
@@ -115,8 +153,18 @@ if __name__ == "__main__":
     tuple_space = TupleSpace(zk_hosts, tuple_path)
 
     # Write a new tuple
+    tuple_data = "INE5418,Fulano,5,87"
+    tuple_space.write_tuple(tuple_data)
+    # Write a new tuple
     tuple_data = "INE5418,Fodano,9,60"
     tuple_space.write_tuple(tuple_data)
 
+    
+
     # List existing tuples
+    tuple_space.list_tuples()
+
+    print("A")
+    print(tuple_space.get("INE5418,*,*,*"))
+    print(tuple_space.read("INE5418,*,*,*"))
     tuple_space.list_tuples()
