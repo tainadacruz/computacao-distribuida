@@ -1,17 +1,118 @@
-# Serviço de Espaço de Tuplas Tolerante a Falhas
+# Serviço de Espaço de Tuplas Tolerante a Falhas com Kazoo/Zookeeper
 
-## Visão Geral
-Este projeto implementa um serviço de espaço de tuplas tolerante a falhas utilizando `Pyro4` para comunicação distribuída e `Redis` para sincronização e bloqueio distribuído. O serviço permite adicionar, ler e remover tuplas de um espaço de memória compartilhada de forma segura e confiável.
+Este projeto implementa um espaço de tuplas usando Kazoo/Zookeeper com um backend Flask e um frontend React. A API do backend se comunica com o servidor Zookeeper para realizar operações nas tuplas, enquanto o frontend React fornece uma interface de usuário para interagir com o espaço de tuplas.
 
-## Requisitos
-- Python 3.x
-- Pyro4
-- Redis
-- threading
+## Índice
 
-## Instalação
+- [Pré-requisitos](#pré-requisitos)
+- [Instruções de Configuração](#instruções-de-configuração)
+  - [Instalar Apache Zookeeper](#instalar-apache-zookeeper)
+  - [Configuração do Backend](#configuração-do-backend)
+  - [Configuração do Frontend](#configuração-do-frontend)
+- [Uso](#uso)
+- [Licença](#licença)
 
-1. **Instale as dependências necessárias:**
+## Pré-requisitos
+
+- Python 3.7+
+- Node.js 12+
+- npm ou yarn
+- Apache Zookeeper
+- Kazoo (biblioteca Python para Zookeeper)
+
+## Instruções de Configuração
+
+### Instalar Apache Zookeeper
+
+1. **Baixar e Instalar o Zookeeper:**
+
+   - Baixe a versão estável mais recente do Zookeeper no [site do Apache Zookeeper](https://zookeeper.apache.org/releases.html).
+
+   - Extraia o arquivo tar.gz baixado:
+
+     ```sh
+     tar -zxf zookeeper-x.y.z.tar.gz
+     cd zookeeper-x.y.z
+     ```
+
+   - Crie um diretório `data`:
+
+     ```sh
+     mkdir data
+     ```
+
+   - Configure o Zookeeper criando um arquivo `conf/zoo.cfg` com o seguinte conteúdo:
+
+     ```cfg
+     tickTime=2000
+     dataDir=/path/to/zookeeper-x.y.z/data
+     clientPort=2181
+     ```
+
+   - Inicie o Zookeeper:
+
+     ```sh
+     bin/zkServer.sh start
+     ```
+
+   - Verifique se o Zookeeper está em execução verificando o status:
+
+     ```sh
+     bin/zkServer.sh status
+     ```
+
+### Configuração do Backend
+
+1. **Clone o repositório:**
+
    ```sh
-   pip install Pyro4 redis
+   git clone https://github.com/tainadacruz/computacao-distribuida.git
+   cd computacao-distribuida/backend
+   ```
 
+
+2. **Crie um ambiente virtual e ative-o:**
+
+   ```sh
+   python -m venv venv
+   source venv/bin/activate # No Windows, use `venv\Scripts\activate`
+   ```
+
+3. **Instale as dependências necessárias:**
+
+   ```sh
+   pip install -r requirements.txt
+   ```
+
+4. **Inicie o servidor Flask:**
+
+   ```sh
+   python app.py
+   ```
+
+### Configuração do Frontend
+
+1. **Navegue até o diretório do frontend:**
+
+   ```sh
+   cd ../frontend
+   ```
+
+2. **Instale as dependências:**
+
+   ```sh
+   npm install
+   ```
+
+3. **Inicie a aplicação React:**
+
+   ```sh
+   npm start
+   ```
+
+Sua aplicação React deve estar em execução em http://localhost:3000.
+
+### Usage
+
+Abra o seu navegador e navegue até http://localhost:3000. 
+Use o formulário na página para escrever, obter e listar tuplas no espaço de tuplas.

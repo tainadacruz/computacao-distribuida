@@ -1,0 +1,17 @@
+# Flask cache
+instance/
+.webassets-cache
+
+# React build
+build/
+
+# Node modules
+node_modules/
+
+# Virtual environment
+.venv/
+venv/
+env/
+ENV/
+env.bak/
+venv.bak/
