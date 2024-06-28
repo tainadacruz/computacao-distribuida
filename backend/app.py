@@ -7,7 +7,7 @@ app = Flask(__name__)
 CORS(app)
 
 zk_hosts = 'localhost:2181'
-tuple_path = '/tuple_space/'
+tuple_path = '/tuple_space'
 zk = KazooClient(hosts=zk_hosts)
 zk.start()
 
