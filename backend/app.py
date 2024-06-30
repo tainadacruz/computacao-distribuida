@@ -7,7 +7,7 @@ app = Flask(__name__)
 CORS(app)
 
 zk_hosts = 'localhost:2181'
-tuple_path = '/tuple_space'
+tuple_path = '/tuple_space/'
 zk = KazooClient(hosts=zk_hosts)
 zk.start()
 
@@ -15,9 +15,12 @@ zk.start()
 def write_tuple():
     data = request.json
     tuple_data = data.get('tuple_data')
+    print(tuple_data)
+    print(tuple_data.encode('utf-8'))
     try:
         if not check_tuple_exists(tuple_data):
-            created_path = zk.create(tuple_path, tuple_data.encode('utf-8'), sequence=True, ephemeral=False)
+            created_path = zk.create(tuple_path, value = tuple_data.encode('utf-8'), sequence=True, ephemeral=False)
+            
             return jsonify({"message": f"Written tuple at {created_path}: {tuple_data}"})
         else:
             return jsonify({"message": f"Tuple already exists: {tuple_data}"})
