@@ -15,6 +15,8 @@ function ListTuples({ username, onUpdateCredits, credits }) {
     }
   };
 
+
+  // Caso queiram remover pela lista de tuplas
   const handleRemoveBook = async (book) => {
     if (credits <= 0) {
       alert("Insuficient Credits. Donate more books!");
@@ -54,11 +56,11 @@ function ListTuples({ username, onUpdateCredits, credits }) {
         {books.map((book, index) => (
           <ListItem key={index}>
             <ListItemText primary={book} />
-            <ListItemSecondaryAction>
+            {/* <ListItemSecondaryAction>
               <IconButton edge="end" aria-label="delete" onClick={() => handleRemoveBook(book)}>
                 <DeleteIcon />
               </IconButton>
-            </ListItemSecondaryAction>
+            </ListItemSecondaryAction> */}
           </ListItem>
         ))}
       </List>

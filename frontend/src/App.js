@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, Fragment } from 'react';
 import axios from 'axios';
-import { Button, Typography, Container, Box, AppBar, Toolbar, Tabs, Tab, Avatar } from '@mui/material/';
+import { Button, Grid, TextField, Typography, Container, Box, List, ListItem, AppBar, Toolbar, Tabs, Tab, Avatar } from '@mui/material/';
 import Login from './components/Login';
 import Signup from './components/Signup';
 import Write from './components/Write';
@@ -76,7 +76,7 @@ function App() {
       <AppBar position="static">
         <Toolbar>
           <Typography variant="h6" sx={{ flexGrow: 1 }}>
-            Sistema de Registro de Livros
+            INE5418 Computação Distribuída
           </Typography>
           <Tabs value={tabValue} onChange={handleTabChange} indicatorColor="secondary" textColor="inherit">
             {!authenticated && <Tab label="Login" />}
@@ -107,7 +107,7 @@ function App() {
         {!authenticated && tabValue === 0 && <Login onLogin={handleLogin} />}
         {!authenticated && tabValue === 1 && <Signup onSignup={handleSignup} />}
         {authenticated && tabValue === 0 && <Write username={username} password={password} onUpdateCredits={handleUpdateCredits} />}
-        {authenticated && tabValue === 1 && <Get username={username} password={password} />}
+        {authenticated && tabValue === 1 && <Get username={username} password={password} onUpdateCredits={handleUpdateCredits} />}
         {authenticated && tabValue === 2 && <ListTuples username={username} onUpdateCredits={handleUpdateCredits} credits={credits} />}
       </Container>
     </div>

@@ -167,7 +167,7 @@ def get(searched_tuple):
                 parse_tuple_size = len(parse_tuple)
                 if parse_search_size == parse_tuple_size:
                     for i in range(len(parse_search)):
-                        if parse_search[i] != '*':
+                        # if parse_search[i] != '*':
                             if parse_search[i] != parse_tuple[i]:
                                 match_found = False
                                 break

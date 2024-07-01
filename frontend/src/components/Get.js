@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Button, Grid, TextField, Typography, Box } from '@mui/material/';
 import axios from 'axios';
 
-function Get({ username, password }) {
+function Get({ username, password, onUpdateCredits }) {
   const [searchedTuple, setSearchedTuple] = useState('');
   const [result, setResult] = useState('');
 
@@ -11,9 +11,9 @@ function Get({ username, password }) {
       const response = await axios.post('http://localhost:5000/get_tuple', {
         searched_tuple: searchedTuple,
         username,
-        password,
       });
       setResult(response.data.tuple || response.data.message);
+      onUpdateCredits();
     } catch (error) {
       console.error('Error getting tuple:', error);
     }
