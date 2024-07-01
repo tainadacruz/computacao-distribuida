@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { Button, Typography, Box, List, ListItem, ListItemText, ListItemSecondaryAction, IconButton } from '@mui/material/';
-import DeleteIcon from '@mui/icons-material/Delete';
 import axios from 'axios';
 
 function ListTuples({ username, onUpdateCredits, credits }) {
