@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { Button, Typography, Box, List, ListItem } from '@mui/material/';
+import { Button, Typography, Box, List, ListItem, ListItemText, ListItemSecondaryAction, IconButton } from '@mui/material/';
+import DeleteIcon from '@mui/icons-material/Delete';
 import axios from 'axios';
 
-function ListTuples() {
+function ListTuples({ username, onUpdateCredits, credits }) {
   const [books, setBooks] = useState([]);
 
   const fetchTuples = async () => {
@@ -11,6 +12,29 @@ function ListTuples() {
       setBooks(response.data.tuples || []);
     } catch (error) {
       console.error('Error listing tuples:', error);
+    }
+  };
+
+  const handleRemoveBook = async (book) => {
+    if (credits <= 0) {
+      alert("Insuficient Credits. Donate more books!");
+      return;
+    }
+
+    try {
+      const response = await axios.post('http://localhost:5000/get_tuple', {
+        searched_tuple: book,
+        username,
+      });
+      if (response.data.tuple) {
+        alert(`Book removed: ${response.data.tuple}`);
+        onUpdateCredits();
+        fetchTuples();
+      } else {
+        alert(response.data.message);
+      }
+    } catch (error) {
+      console.error('Error removing book:', error);
     }
   };
 
@@ -28,7 +52,14 @@ function ListTuples() {
       </Button>
       <List sx={{ mt: 2 }}>
         {books.map((book, index) => (
-          <ListItem key={index}>{book}</ListItem>
+          <ListItem key={index}>
+            <ListItemText primary={book} />
+            <ListItemSecondaryAction>
+              <IconButton edge="end" aria-label="delete" onClick={() => handleRemoveBook(book)}>
+                <DeleteIcon />
+              </IconButton>
+            </ListItemSecondaryAction>
+          </ListItem>
         ))}
       </List>
     </Box>

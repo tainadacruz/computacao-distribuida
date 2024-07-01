@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Button, Grid, TextField, Typography, Box } from '@mui/material/';
 import axios from 'axios';
 
-function Write({ username, password }) {
+function Write({ username, password, onUpdateCredits }) {
   const [bookName, setBookName] = useState('');
   const [author, setAuthor] = useState('');
   const [publisher, setPublisher] = useState('');
@@ -15,9 +15,9 @@ function Write({ username, password }) {
       const response = await axios.post('http://localhost:5000/write_tuple', {
         tuple_data: tupleData,
         username,
-        password,
       });
       alert(response.data.message);
+      onUpdateCredits();
     } catch (error) {
       console.error('Error writing tuple:', error);
     }

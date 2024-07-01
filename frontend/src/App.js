@@ -1,6 +1,6 @@
-import React, { useState, useEffect, Fragment } from 'react';
+import React, { useState } from 'react';
 import axios from 'axios';
-import { Button, Grid, TextField, Typography, Container, Box, List, ListItem, AppBar, Toolbar, Tabs, Tab, Avatar } from '@mui/material/';
+import { Button, Typography, Container, Box, AppBar, Toolbar, Tabs, Tab, Avatar } from '@mui/material/';
 import Login from './components/Login';
 import Signup from './components/Signup';
 import Write from './components/Write';
@@ -67,6 +67,10 @@ function App() {
     setCredits(0);
   };
 
+  const handleUpdateCredits = () => {
+    fetchUserCredits(username);
+  };
+
   return (
     <div className="App">
       <AppBar position="static">
@@ -102,9 +106,9 @@ function App() {
         </Box>
         {!authenticated && tabValue === 0 && <Login onLogin={handleLogin} />}
         {!authenticated && tabValue === 1 && <Signup onSignup={handleSignup} />}
-        {authenticated && tabValue === 0 && <Write username={username} password={password} />}
+        {authenticated && tabValue === 0 && <Write username={username} password={password} onUpdateCredits={handleUpdateCredits} />}
         {authenticated && tabValue === 1 && <Get username={username} password={password} />}
-        {authenticated && tabValue === 2 && <ListTuples />}
+        {authenticated && tabValue === 2 && <ListTuples username={username} onUpdateCredits={handleUpdateCredits} credits={credits} />}
       </Container>
     </div>
   );

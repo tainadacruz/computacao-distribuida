@@ -56,24 +56,13 @@ def create_user(username, password):
         print(f"Error creating user: {e}")
     return False
 
-@app.route('/get_user_credits', methods=['POST'])
-def get_user_credits():
-    data = request.json
-    username = data.get('username')
-    credits = get_user_credit(username)
-    if credits is not None:
-        return jsonify({"credits": credits})
-    else:
-        return jsonify({"error": "User not found"})
-
-
 def get_user_credit_at_backend(username):
     user_path = f"{login_path}{username}"
     if zk.exists(user_path):
         data, _ = zk.get(user_path)
         user_data = data.decode('utf-8').split(':')
         return int(user_data[2])
-    return None
+    return None  
 
 def update_user_credit(username, credit):
     user_path = f"{login_path}{username}"
@@ -82,6 +71,16 @@ def update_user_credit(username, credit):
         user_data = data.decode('utf-8').split(':')
         user_data[2] = str(credit)
         zk.set(user_path, ':'.join(user_data).encode('utf-8'))
+        
+@app.route('/get_user_credits', methods=['POST'])
+def get_user_credits():
+    data = request.json
+    username = data.get('username')
+    credits = get_user_credit_at_backend(username)
+    if credits is not None:
+        return jsonify({"credits": credits})
+    else:
+        return jsonify({"error": "User not found"})
 
 @app.route('/write_tuple', methods=['POST'])
 def write_tuple():
