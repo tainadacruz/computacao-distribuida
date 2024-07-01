@@ -12,8 +12,30 @@ login_path = '/users/'
 zk = KazooClient(hosts=zk_hosts)
 zk.start()
 zk.ensure_path(tuple_path)
-username = input("Digite seu usuário: ")
-password = input("Senha: ")
+zk.ensure_path(login_path)
+# username = input("Digite seu usuário: ")
+# password = input("Senha: ")
+
+@app.route('/login', methods=['POST'])
+def login():
+    data = request.json
+    username = data.get('username')
+    password = data.get('password')
+    if authenticate_user(username, password):
+        return jsonify({"authenticated": True})
+    else:
+        return jsonify({"authenticated": False})
+
+@app.route('/signup', methods=['POST'])
+def signup():
+    data = request.json
+    username = data.get('username')
+    password = data.get('password')
+    if create_user(username, password):
+        return jsonify({"created": True})
+    else:
+        return jsonify({"created": False})
+
 
 def authenticate_user(username, password):
     user_path = f"{login_path}{username}"

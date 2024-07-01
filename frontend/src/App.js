@@ -1,54 +1,56 @@
 import React, { useState, useEffect, Fragment } from 'react';
 import axios from 'axios';
 import { Button, Grid, TextField, Typography, Container, Box, List, ListItem, AppBar, Toolbar, Tabs, Tab } from '@mui/material/';
+import Login from './components/Login';
+import Signup from './components/Signup';
+import Write from './components/Write';
+import Get from './components/Get';
+import ListTuples from './components/ListTuples';
 
 function App() {
-  const [bookName, setBookName] = useState('');
-  const [author, setAuthor] = useState('');
-  const [publisher, setPublisher] = useState('');
-  const [year, setYear] = useState('');
-  const [genre, setGenre] = useState('');
-  const [searchedTuple, setSearchedTuple] = useState('');
-  const [result, setResult] = useState('');
-  const [books, setBooks] = useState([]);
   const [tabValue, setTabValue] = useState(0);
-
-  const handleWriteTuple = async () => {
-    const tupleData = `${bookName || '*'}, ${author || '*'}, ${publisher || '*'}, ${year || '*'}, ${genre || '*'}`;
-    try {
-      const response = await axios.post('http://localhost:5000/write_tuple', { tuple_data: tupleData });
-      alert(response.data.message);
-      fetchTuples();
-    } catch (error) {
-      console.error('Error writing tuple:', error);
-    }
-  };
-
-  const handleGetTuple = async () => {
-    try {
-      const response = await axios.post('http://localhost:5000/get_tuple', { searched_tuple: searchedTuple });
-      setResult(response.data.tuple || response.data.message);
-      fetchTuples();
-    } catch (error) {
-      console.error('Error getting tuple:', error);
-    }
-  };
-
-  const fetchTuples = async () => {
-    try {
-      const response = await axios.get('http://localhost:5000/list_tuples');
-      setBooks(response.data.tuples || []);
-    } catch (error) {
-      console.error('Error listing tuples:', error);
-    }
-  };
-
-  useEffect(() => {
-    fetchTuples();
-  }, []);
+  const [authenticated, setAuthenticated] = useState(false);
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
 
   const handleTabChange = (event, newValue) => {
     setTabValue(newValue);
+  };
+
+  const handleLogin = async (username, password) => {
+    try {
+      const response = await axios.post('http://localhost:5000/login', { username, password });
+      if (response.data.authenticated) {
+        setAuthenticated(true);
+        setUsername(username);
+        setPassword(password);
+      } else {
+        alert('Login failed');
+      }
+    } catch (error) {
+      console.error('Error logging in:', error);
+    }
+  };
+
+  const handleSignup = async (username, password) => {
+    try {
+      const response = await axios.post('http://localhost:5000/signup', { username, password });
+      if (response.data.created) {
+        alert('Signup successful');
+        setTabValue(0); // Redirect to login
+      } else {
+        alert('Signup failed');
+      }
+    } catch (error) {
+      console.error('Error signing up:', error);
+    }
+  };
+
+  const handleLogout = () => {
+    setAuthenticated(false);
+    setUsername('');
+    setPassword('');
+    setTabValue(0);
   };
 
   return (
@@ -59,10 +61,17 @@ function App() {
             Sistema de Registro de Livros
           </Typography>
           <Tabs value={tabValue} onChange={handleTabChange} indicatorColor="secondary" textColor="inherit">
-            <Tab label="Registrar Livros" />
-            <Tab label="Buscar Livros" />
-            <Tab label="Lista de Livros Registrados" />
+            {!authenticated && <Tab label="Login" />}
+            {!authenticated &&<Tab label="Signup" />}
+            {authenticated && <Tab label="Registrar Livros" />}
+            {authenticated && <Tab label="Buscar Livros" />}
+            {authenticated && <Tab label="Lista de Livros Registrados" />}
           </Tabs>
+          {authenticated && (
+            <Button color="inherit" onClick={handleLogout}>
+              Logout
+            </Button>
+          )}
         </Toolbar>
       </AppBar>
       <Container maxWidth="md">
@@ -71,116 +80,11 @@ function App() {
             Sistema de Registro de Livros
           </Typography>
         </Box>
-        {tabValue === 0 && (
-          <Box sx={{ mt: 4 }}>
-            <Typography variant="h5" gutterBottom sx={{ fontWeight: 'bold' }}>
-              Registrar Livros
-            </Typography>
-            <Grid container spacing={3}>
-              <Grid item xs={12} md={6}>
-                <TextField
-                  id="book-name"
-                  label="Título"
-                  variant="outlined"
-                  fullWidth
-                  value={bookName}
-                  onChange={(e) => setBookName(e.target.value)}
-                />
-              </Grid>
-              <Grid item xs={12} md={6}>
-                <TextField
-                  id="author"
-                  label="Autor"
-                  variant="outlined"
-                  fullWidth
-                  value={author}
-                  onChange={(e) => setAuthor(e.target.value)}
-                />
-              </Grid>
-              <Grid item xs={12} md={6}>
-                <TextField
-                  id="publisher"
-                  label="Editora"
-                  variant="outlined"
-                  fullWidth
-                  value={publisher}
-                  onChange={(e) => setPublisher(e.target.value)}
-                />
-              </Grid>
-              <Grid item xs={12} md={6}>
-                <TextField
-                  id="year"
-                  label="Ano"
-                  variant="outlined"
-                  fullWidth
-                  value={year}
-                  onChange={(e) => setYear(e.target.value)}
-                />
-              </Grid>
-              <Grid item xs={12} md={12}>
-                <TextField
-                  id="genre"
-                  label="Gênero"
-                  variant="outlined"
-                  fullWidth
-                  value={genre}
-                  onChange={(e) => setGenre(e.target.value)}
-                />
-              </Grid>
-              <Grid item xs={12} md={10} />
-              <Grid item xs={12} md={2}>
-                <Button variant="contained" onClick={handleWriteTuple} fullWidth>
-                  Registrar
-                </Button>
-              </Grid>
-            </Grid>
-          </Box>
-        )}
-        {tabValue === 1 && (
-          <Box sx={{ mt: 4 }}>
-            <Typography variant="h5" gutterBottom sx={{ fontWeight: 'bold' }}>
-              Buscar Livros
-            </Typography>
-            <Grid container spacing={3}>
-              <Grid item xs={12} md={12}>
-                <TextField
-                  id="search-tuple"
-                  label="Digite o padrão de tupla"
-                  variant="outlined"
-                  fullWidth
-                  value={searchedTuple}
-                  onChange={(e) => setSearchedTuple(e.target.value)}
-                />
-              </Grid>
-              <Grid item xs={12} md={10} />
-              <Grid item xs={12} md={2}>
-                <Button variant="contained" onClick={handleGetTuple} fullWidth>
-                  Buscar
-                </Button>
-              </Grid>
-            </Grid>
-            {result && (
-              <Box sx={{ mt: 2 }}>
-                <Typography variant="body1">Resultado: {result}</Typography>
-              </Box>
-            )}
-          </Box>
-        )}
-        {tabValue === 2 && (
-          <Box sx={{ mt: 4 }}>
-            <Typography variant="h5" gutterBottom sx={{ fontWeight: 'bold' }}>
-              Lista de Livros Registrados
-            </Typography>
-            <Button variant="contained" color="success" onClick={fetchTuples} fullWidth>
-              Atualizar
-            </Button>
-            <List sx={{ mt: 2 }}>
-              {books.map((book, index) => (
-                <ListItem key={index}>{book}</ListItem>
-              ))}
-            </List>
-          </Box>
-        )}
+        {!authenticated && tabValue === 0 && <Login onLogin={handleLogin} />}
+        {!authenticated && tabValue === 1 && <Signup onSignup={handleSignup} />}
+        {authenticated && tabValue === 0 && <Write username={username} password={password} />}
+        {authenticated && tabValue === 1 && <Get username={username} password={password} />}
+        {authenticated && tabValue === 2 && <ListTuples />}
       </Container>
     </div>
   );
