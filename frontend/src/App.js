@@ -1,16 +1,20 @@
 import React, { useState, useEffect, Fragment } from 'react';
 import axios from 'axios';
-import { Button, Grid, TextField, Typography, Container, Box, List, ListItem } from '@mui/material/';
+import { Button, Grid, TextField, Typography, Container, Box, List, ListItem, AppBar, Toolbar, Tabs, Tab } from '@mui/material/';
 
 function App() {
-  const [tupleData, setTupleData] = useState('');
+  const [bookName, setBookName] = useState('');
+  const [author, setAuthor] = useState('');
+  const [publisher, setPublisher] = useState('');
+  const [year, setYear] = useState('');
+  const [genre, setGenre] = useState('');
   const [searchedTuple, setSearchedTuple] = useState('');
   const [result, setResult] = useState('');
-  const [tuples, setTuples] = useState([]);
-
-  console.log(tupleData)
+  const [books, setBooks] = useState([]);
+  const [tabValue, setTabValue] = useState(0);
 
   const handleWriteTuple = async () => {
+    const tupleData = `${bookName || '*'}, ${author || '*'}, ${publisher || '*'}, ${year || '*'}, ${genre || '*'}`;
     try {
       const response = await axios.post('http://localhost:5000/write_tuple', { tuple_data: tupleData });
       alert(response.data.message);
@@ -33,7 +37,7 @@ function App() {
   const fetchTuples = async () => {
     try {
       const response = await axios.get('http://localhost:5000/list_tuples');
-      setTuples(response.data.tuples || []);
+      setBooks(response.data.tuples || []);
     } catch (error) {
       console.error('Error listing tuples:', error);
     }
@@ -43,62 +47,141 @@ function App() {
     fetchTuples();
   }, []);
 
+  const handleTabChange = (event, newValue) => {
+    setTabValue(newValue);
+  };
+
   return (
     <div className="App">
-    <Fragment>
+      <AppBar position="static">
+        <Toolbar>
+          <Typography variant="h6" sx={{ flexGrow: 1 }}>
+            Sistema de Registro de Livros
+          </Typography>
+          <Tabs value={tabValue} onChange={handleTabChange} indicatorColor="secondary" textColor="inherit">
+            <Tab label="Registrar Livros" />
+            <Tab label="Buscar Livros" />
+            <Tab label="Lista de Livros Registrados" />
+          </Tabs>
+        </Toolbar>
+      </AppBar>
       <Container maxWidth="md">
         <Box sx={{ textAlign: 'center', mt: 4 }}>
-          <Typography variant="h3" gutterBottom>Tuple Space</Typography>
+          <Typography variant="h3" gutterBottom sx={{ fontWeight: 'bold' }}>
+            Sistema de Registro de Livros
+          </Typography>
         </Box>
-        <Grid container spacing={2} justifyContent="center">
-          <Grid item xs={12} md={6}>
-            <TextField
-              id="outlined-basic" 
-              label="Write Tuple" 
-              variant="outlined" 
-              fullWidth
-              value={tupleData} 
-              onChange={(e) => setTupleData(e.target.value)}
-            />
-          </Grid>
-          <Grid item xs={12} md={3}>
-            <Button variant="contained" onClick={handleWriteTuple} fullWidth>Write</Button>
-          </Grid>
-          <Grid item xs={12} mt={4}>
-            <Typography variant="h5">Get Tuple</Typography>
-          </Grid>
-          <Grid item xs={12} md={6}>
-            <TextField
-              id="search-tuple"
-              label="Enter tuple pattern"
-              variant="outlined"
-              fullWidth
-              value={searchedTuple}
-              onChange={(e) => setSearchedTuple(e.target.value)}
-            />
-          </Grid>
-          <Grid item xs={12} md={3}>
-            <Button variant="contained" onClick={handleGetTuple} fullWidth>Get</Button>
-          </Grid>
-          <Grid item xs={12}>
-            {result && <Typography variant="body1">Result: {result}</Typography>}
-          </Grid>
-          <Grid item xs={12} mt={4}>
-            <Typography variant="h5">List Tuples</Typography>
-          </Grid>
-          <Grid item xs={12}>
-            <Button variant="contained" color="success" onClick={fetchTuples} fullWidth>Refresh</Button>
-          </Grid>
-          <Grid item xs={12}>
-            <List>
-              {tuples.map((tuple, index) => (
-                <ListItem key={index}>{tuple}</ListItem>
+        {tabValue === 0 && (
+          <Box sx={{ mt: 4 }}>
+            <Typography variant="h5" gutterBottom sx={{ fontWeight: 'bold' }}>
+              Registrar Livros
+            </Typography>
+            <Grid container spacing={3}>
+              <Grid item xs={12} md={6}>
+                <TextField
+                  id="book-name"
+                  label="Título"
+                  variant="outlined"
+                  fullWidth
+                  value={bookName}
+                  onChange={(e) => setBookName(e.target.value)}
+                />
+              </Grid>
+              <Grid item xs={12} md={6}>
+                <TextField
+                  id="author"
+                  label="Autor"
+                  variant="outlined"
+                  fullWidth
+                  value={author}
+                  onChange={(e) => setAuthor(e.target.value)}
+                />
+              </Grid>
+              <Grid item xs={12} md={6}>
+                <TextField
+                  id="publisher"
+                  label="Editora"
+                  variant="outlined"
+                  fullWidth
+                  value={publisher}
+                  onChange={(e) => setPublisher(e.target.value)}
+                />
+              </Grid>
+              <Grid item xs={12} md={6}>
+                <TextField
+                  id="year"
+                  label="Ano"
+                  variant="outlined"
+                  fullWidth
+                  value={year}
+                  onChange={(e) => setYear(e.target.value)}
+                />
+              </Grid>
+              <Grid item xs={12} md={12}>
+                <TextField
+                  id="genre"
+                  label="Gênero"
+                  variant="outlined"
+                  fullWidth
+                  value={genre}
+                  onChange={(e) => setGenre(e.target.value)}
+                />
+              </Grid>
+              <Grid item xs={12} md={10} />
+              <Grid item xs={12} md={2}>
+                <Button variant="contained" onClick={handleWriteTuple} fullWidth>
+                  Registrar
+                </Button>
+              </Grid>
+            </Grid>
+          </Box>
+        )}
+        {tabValue === 1 && (
+          <Box sx={{ mt: 4 }}>
+            <Typography variant="h5" gutterBottom sx={{ fontWeight: 'bold' }}>
+              Buscar Livros
+            </Typography>
+            <Grid container spacing={3}>
+              <Grid item xs={12} md={12}>
+                <TextField
+                  id="search-tuple"
+                  label="Digite o padrão de tupla"
+                  variant="outlined"
+                  fullWidth
+                  value={searchedTuple}
+                  onChange={(e) => setSearchedTuple(e.target.value)}
+                />
+              </Grid>
+              <Grid item xs={12} md={10} />
+              <Grid item xs={12} md={2}>
+                <Button variant="contained" onClick={handleGetTuple} fullWidth>
+                  Buscar
+                </Button>
+              </Grid>
+            </Grid>
+            {result && (
+              <Box sx={{ mt: 2 }}>
+                <Typography variant="body1">Resultado: {result}</Typography>
+              </Box>
+            )}
+          </Box>
+        )}
+        {tabValue === 2 && (
+          <Box sx={{ mt: 4 }}>
+            <Typography variant="h5" gutterBottom sx={{ fontWeight: 'bold' }}>
+              Lista de Livros Registrados
+            </Typography>
+            <Button variant="contained" color="success" onClick={fetchTuples} fullWidth>
+              Atualizar
+            </Button>
+            <List sx={{ mt: 2 }}>
+              {books.map((book, index) => (
+                <ListItem key={index}>{book}</ListItem>
               ))}
             </List>
-          </Grid>
-        </Grid>
+          </Box>
+        )}
       </Container>
-    </Fragment>
     </div>
   );
 }

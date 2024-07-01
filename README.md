@@ -34,19 +34,11 @@ Este projeto implementa um espaço de tuplas usando Kazoo/Zookeeper com um backe
      cd zookeeper-x.y.z
      ```
 
-   - Crie um diretório `data`:
+   - Execute o seguinte comando:
 
-     ```sh
-     mkdir data
      ```
-
-   - Configure o Zookeeper criando um arquivo `conf/zoo.cfg` com o seguinte conteúdo:
-
-     ```cfg
-     tickTime=2000
-     dataDir=/path/to/zookeeper-x.y.z/data
-     clientPort=2181
-     ```
+     cp conf/zoo_sample.cfg conf/zoo.cfg 
+     ``` 
 
    - Inicie o Zookeeper:
 

@@ -10,6 +10,7 @@ zk_hosts = 'localhost:2181'
 tuple_path = '/tuple_space/'
 zk = KazooClient(hosts=zk_hosts)
 zk.start()
+zk.ensure_path(tuple_path)
 
 @app.route('/write_tuple', methods=['POST'])
 def write_tuple():
