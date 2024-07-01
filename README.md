@@ -6,7 +6,7 @@ Este projeto implementa um espaço de tuplas usando Kazoo/Zookeeper com um backe
 
 - [Pré-requisitos](#pré-requisitos)
 - [Instruções de Configuração](#instruções-de-configuração)
-  - [Instalar Apache Zookeeper](#instalar-apache-zookeeper)
+  - [Instalação do Apache Zookeeper](#instação-do-apache-zookeeper)
   - [Configuração do Backend](#configuração-do-backend)
   - [Configuração do Frontend](#configuração-do-frontend)
 - [Uso](#uso)
@@ -21,45 +21,47 @@ Este projeto implementa um espaço de tuplas usando Kazoo/Zookeeper com um backe
 
 ## Instruções de Configuração
 
-### Instalar Apache Zookeeper
+### Instalação do Apache Zookeeper
 
-1. **Baixar e Instalar o Zookeeper:**
+1. **Baixe a versão estável mais recente do Zookeeper no [site do Apache Zookeeper](https://zookeeper.apache.org/releases.html).**
 
-   - Baixe a versão estável mais recente do Zookeeper no [site do Apache Zookeeper](https://zookeeper.apache.org/releases.html).
 
-   - Extraia o arquivo tar.gz baixado 3 vezes(o app está programado para funcionar com no máximo 3 servidores no momento) cada um em seu próprio diretório:
+2. **Extraia o arquivo tar.gz baixado 3 vezes cada um em seu próprio diretório (a aplicação está programada para funcionar com no máximo 3 servidores):**
 
-     ```sh
-     mkdir Zookeeper
-     mkdir Zookeeper2
-     mkdir Zoopkeeper3
-     tar -zxf zookeeper-x.y.z.tar.gz -C ./Zookeeper
-     tar -zxf zookeeper-x.y.z.tar.gz -C ./Zookeeper2
-     tar -zxf zookeeper-x.y.z.tar.gz -C ./Zookeeper3
-     ```
+    ```sh
+    mkdir Zookeeper
+    mkdir Zookeeper2
+    mkdir Zoopkeeper3
+    tar -zxf zookeeper-x.y.z.tar.gz -C ./Zookeeper
+    tar -zxf zookeeper-x.y.z.tar.gz -C ./Zookeeper2
+    tar -zxf zookeeper-x.y.z.tar.gz -C ./Zookeeper3
+    ```
 
-   - Dentro de cada pasta extraída execute os seguintes comandos:
+3. **Dentro de cada pasta extraída, execute os seguintes comandos:**
 
-     ```
-     cp conf/zoo_sample.cfg conf/zoo.cfg
-     mkdir data
-     ``` 
+    ```
+    cp conf/zoo_sample.cfg conf/zoo.cfg
+    mkdir data
+    ``` 
    
-   - Modifique o arquivo zoo.cfg em cada pasta extraída para que fique com o seguinte texto:
+4. **Modifique o arquivo zoo.cfg em cada pasta extraída para que fique com o seguinte texto:**
      
-     ```
-     tickTime=2000
-     initLimit=5
-     syncLimit=2
-     dataDir=/path/para/data
-     clientPort=XXXX
-     server.1=localhost:2888:3888
-     server.2=localhost:2889:3889
-     server.3=localhost:2890:3890
-     ```
-   - A clientPort deve ter um valor diferent em cada arquivo zoo.cfg, esses sendo 2181, 2182 e 2183
+    ```
+    tickTime=2000
+    initLimit=5
+    syncLimit=2
+    dataDir=/path/para/data
+    clientPort=XXXX
+    server.1=localhost:2888:3888
+    server.2=localhost:2889:3889
+    server.3=localhost:2890:3890
+    ```
 
-   - Dentro do diretório data de cada instância do zookeeper, crie um arquivo chamado myid com o seguinte comando:
+    A clientPort deve ter um valor diferent em cada arquivo zoo.cfg, esses sendo 2181, 2182 e 2183
+
+
+5. **Dentro do diretório data/ de cada instância do zookeeper, crie um arquivo chamado myid com o seguinte comando:**
+   
    - Em Zookeeper  
      ```
      echo "1" >> myid
@@ -73,13 +75,13 @@ Este projeto implementa um espaço de tuplas usando Kazoo/Zookeeper com um backe
      echo "3" >> myid
      ```
 
-   - Inicie o Zookeeper com esse comando em terminais diferentes uma vez para cada servidor:
+6. **Inicie o Zookeeper com esse comando em terminais diferentes uma vez para cada servidor:**
 
      ```sh
      bin/zkServer.sh start
      ```
 
-   - Verifique se o Zookeeper está em execução verificando o status:
+7. **Verifique se o Zookeeper está em execução através do status:**
 
      ```sh
      bin/zkServer.sh status
