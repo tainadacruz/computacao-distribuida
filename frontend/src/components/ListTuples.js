@@ -47,7 +47,7 @@ function ListTuples({ username, onUpdateCredits, credits }) {
   return (
     <Box sx={{ mt: 4 }}>
       <Typography variant="h5" gutterBottom sx={{ fontWeight: 'bold' }}>
-        Lista de Livros Registrados
+        Lista de Livros
       </Typography>
       <Button variant="contained" color="success" onClick={fetchTuples} fullWidth>
         Atualizar
