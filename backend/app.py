@@ -56,7 +56,18 @@ def create_user(username, password):
         print(f"Error creating user: {e}")
     return False
 
-def get_user_credit(username):
+@app.route('/get_user_credits', methods=['POST'])
+def get_user_credits():
+    data = request.json
+    username = data.get('username')
+    credits = get_user_credit(username)
+    if credits is not None:
+        return jsonify({"credits": credits})
+    else:
+        return jsonify({"error": "User not found"})
+
+
+def get_user_credit_at_backend(username):
     user_path = f"{login_path}{username}"
     if zk.exists(user_path):
         data, _ = zk.get(user_path)
@@ -76,15 +87,16 @@ def update_user_credit(username, credit):
 def write_tuple():
     data = request.json
     tuple_data = data.get('tuple_data')
+    username = data.get('username')
     print(tuple_data)
     print(tuple_data.encode('utf-8'))
     try:
         if not check_tuple_exists(tuple_data):
             created_path = zk.create(tuple_path, value = tuple_data.encode('utf-8'), sequence=True, ephemeral=False)
-            credit = get_user_credit(username)
+            credit = get_user_credit_at_backend(username)
             print(credit)
             update_user_credit(username, credit+1)
-            print(f"novo credito: {get_user_credit(username)}")
+            print(f"novo credito: {get_user_credit_at_backend(username)}")
             
             return jsonify({"message": f"Written tuple at {created_path}: {tuple_data}"})
         else:
@@ -97,11 +109,12 @@ def write_tuple():
 @app.route('/get_tuple', methods=['POST'])
 def get_tuple():
     searched_tuple = request.json.get('searched_tuple')
-    if get_user_credit(username) <= 0:
+    username = request.json.get('username')
+    if get_user_credit_at_backend(username) <= 0:
         return jsonify({"message": "Insuficient Credits. Donate more books!"})
     found_tuple = get(searched_tuple)
     if found_tuple:
-        credit = get_user_credit(username)
+        credit = get_user_credit_at_backend(username)
         update_user_credit(username,credit-1)
         return jsonify({"tuple": found_tuple})
     else:

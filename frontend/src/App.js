@@ -1,6 +1,6 @@
 import React, { useState, useEffect, Fragment } from 'react';
 import axios from 'axios';
-import { Button, Grid, TextField, Typography, Container, Box, List, ListItem, AppBar, Toolbar, Tabs, Tab } from '@mui/material/';
+import { Button, Grid, TextField, Typography, Container, Box, List, ListItem, AppBar, Toolbar, Tabs, Tab, Avatar } from '@mui/material/';
 import Login from './components/Login';
 import Signup from './components/Signup';
 import Write from './components/Write';
@@ -12,9 +12,21 @@ function App() {
   const [authenticated, setAuthenticated] = useState(false);
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  const [credits, setCredits] = useState(0);
 
   const handleTabChange = (event, newValue) => {
     setTabValue(newValue);
+  };
+
+  const fetchUserCredits = async (username) => {
+    try {
+      const response = await axios.post('http://localhost:5000/get_user_credits', { username });
+      if (response.data.credits !== undefined) {
+        setCredits(response.data.credits);
+      }
+    } catch (error) {
+      console.error('Error fetching user credits:', error);
+    }
   };
 
   const handleLogin = async (username, password) => {
@@ -24,6 +36,7 @@ function App() {
         setAuthenticated(true);
         setUsername(username);
         setPassword(password);
+        fetchUserCredits(username);
       } else {
         alert('Login failed');
       }
@@ -51,6 +64,7 @@ function App() {
     setUsername('');
     setPassword('');
     setTabValue(0);
+    setCredits(0);
   };
 
   return (
@@ -62,15 +76,21 @@ function App() {
           </Typography>
           <Tabs value={tabValue} onChange={handleTabChange} indicatorColor="secondary" textColor="inherit">
             {!authenticated && <Tab label="Login" />}
-            {!authenticated &&<Tab label="Signup" />}
+            {!authenticated && <Tab label="Signup" />}
             {authenticated && <Tab label="Registrar Livros" />}
             {authenticated && <Tab label="Buscar Livros" />}
             {authenticated && <Tab label="Lista de Livros Registrados" />}
           </Tabs>
           {authenticated && (
-            <Button color="inherit" onClick={handleLogout}>
-              Logout
-            </Button>
+            <Box sx={{ display: 'flex', alignItems: 'center', ml: 2 }}>
+              <Avatar sx={{ bgcolor: 'green', width: 24, height: 24, mr: 1 }} />
+              <Typography variant="body1" sx={{ mr: 2 }}>
+                {username} (Créditos: {credits})
+              </Typography>
+              <Button color="inherit" onClick={handleLogout}>
+                Logout
+              </Button>
+            </Box>
           )}
         </Toolbar>
       </AppBar>
