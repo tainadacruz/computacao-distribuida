@@ -8,9 +8,47 @@ CORS(app)
 
 zk_hosts = 'localhost:2181'
 tuple_path = '/tuple_space/'
+login_path = '/users/'
 zk = KazooClient(hosts=zk_hosts)
 zk.start()
 zk.ensure_path(tuple_path)
+username = input("Digite seu usuário: ")
+password = input("Senha: ")
+
+def authenticate_user(username, password):
+    user_path = f"{login_path}{username}"
+    if zk.exists(user_path):
+        data, _ = zk.get(user_path)
+        user_data = data.decode('utf-8').split(':')
+        if user_data[1] == password:
+            return True
+    return False
+
+def create_user(username, password):
+    user_path = f"{login_path}{username}"
+    try:
+        if not zk.exists(user_path):
+            zk.create(user_path, f"{username}:{password}:0".encode('utf-8'))
+            return True
+    except KazooException as e:
+        print(f"Error creating user: {e}")
+    return False
+
+def get_user_credit(username):
+    user_path = f"{login_path}{username}"
+    if zk.exists(user_path):
+        data, _ = zk.get(user_path)
+        user_data = data.decode('utf-8').split(':')
+        return int(user_data[2])
+    return None
+
+def update_user_credit(username, credit):
+    user_path = f"{login_path}{username}"
+    if zk.exists(user_path):
+        data, _ = zk.get(user_path)
+        user_data = data.decode('utf-8').split(':')
+        user_data[2] = str(credit)
+        zk.set(user_path, ':'.join(user_data).encode('utf-8'))
 
 @app.route('/write_tuple', methods=['POST'])
 def write_tuple():
@@ -21,6 +59,10 @@ def write_tuple():
     try:
         if not check_tuple_exists(tuple_data):
             created_path = zk.create(tuple_path, value = tuple_data.encode('utf-8'), sequence=True, ephemeral=False)
+            credit = get_user_credit(username)
+            print(credit)
+            update_user_credit(username, credit+1)
+            print(f"novo credito: {get_user_credit(username)}")
             
             return jsonify({"message": f"Written tuple at {created_path}: {tuple_data}"})
         else:
@@ -33,8 +75,12 @@ def write_tuple():
 @app.route('/get_tuple', methods=['POST'])
 def get_tuple():
     searched_tuple = request.json.get('searched_tuple')
+    if get_user_credit(username) <= 0:
+        return jsonify({"message": "Insuficient Credits. Donate more books!"})
     found_tuple = get(searched_tuple)
     if found_tuple:
+        credit = get_user_credit(username)
+        update_user_credit(username,credit-1)
         return jsonify({"tuple": found_tuple})
     else:
         return jsonify({"message": "Tuple not found"})
