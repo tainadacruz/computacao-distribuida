@@ -27,20 +27,53 @@ Este projeto implementa um espaço de tuplas usando Kazoo/Zookeeper com um backe
 
    - Baixe a versão estável mais recente do Zookeeper no [site do Apache Zookeeper](https://zookeeper.apache.org/releases.html).
 
-   - Extraia o arquivo tar.gz baixado:
+   - Extraia o arquivo tar.gz baixado 3 vezes(o app está programado para funcionar com no máximo 3 servidores no momento) cada um em seu próprio diretório:
 
      ```sh
-     tar -zxf zookeeper-x.y.z.tar.gz
-     cd zookeeper-x.y.z
+     mkdir Zookeeper
+     mkdir Zookeeper2
+     mkdir Zoopkeeper3
+     tar -zxf zookeeper-x.y.z.tar.gz -C ./Zookeeper
+     tar -zxf zookeeper-x.y.z.tar.gz -C ./Zookeeper2
+     tar -zxf zookeeper-x.y.z.tar.gz -C ./Zookeeper3
      ```
 
-   - Execute o seguinte comando:
+   - Dentro de cada pasta extraída execute os seguintes comandos:
 
      ```
-     cp conf/zoo_sample.cfg conf/zoo.cfg 
+     cp conf/zoo_sample.cfg conf/zoo.cfg
+     mkdir data
      ``` 
+   
+   - Modifique o arquivo zoo.cfg em cada pasta extraída para que fique com o seguinte texto:
+     
+     ```
+     tickTime=2000
+     initLimit=5
+     syncLimit=2
+     dataDir=/path/para/data
+     clientPort=XXXX
+     server.1=localhost:2888:3888
+     server.2=localhost:2889:3889
+     server.3=localhost:2890:3890
+     ```
+   - A clientPort deve ter um valor diferent em cada arquivo zoo.cfg, esses sendo 2181, 2182 e 2183
 
-   - Inicie o Zookeeper:
+   - Dentro do diretório data de cada instância do zookeeper, crie um arquivo chamado myid com o seguinte comando:
+   - Em Zookeeper  
+     ```
+     echo "1" >> myid
+     ```
+   - Em Zookeeper2
+     ```
+     echo "2" >> myid
+     ```
+   - Em Zookeeper3
+     ```
+     echo "3" >> myid
+     ```
+
+   - Inicie o Zookeeper com esse comando em terminais diferentes uma vez para cada servidor:
 
      ```sh
      bin/zkServer.sh start
