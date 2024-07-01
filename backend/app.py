@@ -6,7 +6,7 @@ from kazoo.exceptions import NodeExistsError, KazooException, SessionExpiredErro
 app = Flask(__name__)
 CORS(app)
 
-zk_hosts = 'localhost:2181'
+zk_hosts = ['localhost:2181','localhost:2182','localhost:2183']
 tuple_path = '/tuple_space/'
 login_path = '/users/'
 zk = KazooClient(hosts=zk_hosts)
