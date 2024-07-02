@@ -57,10 +57,10 @@ Este projeto implementa um espaço de tuplas usando Kazoo/Zookeeper com um backe
     server.3=localhost:2890:3890
     ```
 
-    A clientPort deve ter um valor diferent em cada arquivo zoo.cfg, esses sendo 2181, 2182 e 2183
-
-
-5. **Dentro do diretório data/ de cada instância do zookeeper, crie um arquivo chamado myid com o seguinte comando:**
+    A clientPort deve ter um valor diferent em cada arquivo zoo.cfg, esses sendo 2181, 2182 e 2183.
+    Substituir /path/para/data em dataDir do arquivo zoo.cfg pelo caminho de home ao diretório data do servidor que está sendo configurado.
+   
+6. **Dentro do diretório data/ de cada instância do zookeeper, crie um arquivo chamado myid com o seguinte comando:**
    
    - Em Zookeeper  
      ```
@@ -75,13 +75,13 @@ Este projeto implementa um espaço de tuplas usando Kazoo/Zookeeper com um backe
      echo "3" >> myid
      ```
 
-6. **Inicie o Zookeeper com esse comando em terminais diferentes uma vez para cada servidor:**
+7. **Inicie o Zookeeper com esse comando em terminais diferentes uma vez para cada servidor:**
 
      ```sh
      bin/zkServer.sh start
      ```
 
-7. **Verifique se o Zookeeper está em execução através do status:**
+8. **Verifique se o Zookeeper está em execução através do status:**
 
      ```sh
      bin/zkServer.sh status
