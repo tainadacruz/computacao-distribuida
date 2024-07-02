@@ -99,9 +99,9 @@ function App() {
         </Toolbar>
       </AppBar>
       <Container maxWidth="md">
-        <Box sx={{ textAlign: 'center', mt: 4 }}>
+        <Box sx={{ textAlign: 'center', mt: 5 }}>
           <Typography variant="h3" gutterBottom sx={{ fontWeight: 'bold' }}>
-            Sistema de Registro de Livros
+            Sistema de Troca de Livros
           </Typography>
         </Box>
         {!authenticated && tabValue === 0 && <Login onLogin={handleLogin} />}

@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Button, Grid, TextField, Typography, Box } from '@mui/material/';
 import axios from 'axios';
 
-function Write({ username, password, onUpdateCredits }) {
+function Write({ username, onUpdateCredits }) {
   const [bookName, setBookName] = useState('');
   const [author, setAuthor] = useState('');
   const [publisher, setPublisher] = useState('');
@@ -26,7 +26,7 @@ function Write({ username, password, onUpdateCredits }) {
   return (
     <Box sx={{ mt: 4 }}>
       <Typography variant="h5" gutterBottom sx={{ fontWeight: 'bold' }}>
-        Registrar Livros
+        Registrar Livro
       </Typography>
       <Grid container spacing={3}>
         <Grid item xs={12} md={6}>

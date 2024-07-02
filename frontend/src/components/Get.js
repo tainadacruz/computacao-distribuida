@@ -22,7 +22,7 @@ function Get({ username, password, onUpdateCredits }) {
   return (
     <Box sx={{ mt: 4 }}>
       <Typography variant="h5" gutterBottom sx={{ fontWeight: 'bold' }}>
-        Buscar Livros
+        Buscar Livro
       </Typography>
       <Grid container spacing={3}>
         <Grid item xs={12} md={12}>
