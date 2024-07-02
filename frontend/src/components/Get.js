@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Button, Grid, TextField, Typography, Box } from '@mui/material/';
 import axios from 'axios';
 
-function Get({ username, password, onUpdateCredits }) {
+function Get({ username, onUpdateCredits }) {
   const [searchedTuple, setSearchedTuple] = useState('');
   const [result, setResult] = useState('');
 
